@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CATEGORIES, GUIDES, TOOLS, toolBySlug } from '../src/data/site';
-import { SITE } from '../src/config';
+import { SITE, ADS_ENABLED, ADSENSE_CLIENT } from '../src/config';
 
 /**
  * Checks the built site rather than the source.
@@ -159,11 +159,54 @@ describeBuilt('built site', () => {
     expect(tool.html).toContain('"@type":"FAQPage"');
   });
 
-  it('reserves ad slot height so enabling ads cannot shift layout', () => {
-    const tool = pages.find((p) => p.url === '/take-home-pay-calculator/')!;
-    expect(tool.html).toMatch(/class="ad-slot" data-format="leaderboard"/);
-    // No ad script until an account is approved.
-    expect(tool.html).not.toContain('adsbygoogle.js');
+  /*
+   * These assertions are driven off the config rather than hard-coded, because
+   * the site passes through three ad states — off, approved-but-no-slots, and
+   * live — and the first version of this test froze the first of those in place
+   * and failed the moment a publisher ID was added.
+   */
+  it('loads the ad script on every page once ads are enabled, and none before', () => {
+    for (const page of pages) {
+      const hasScript = page.html.includes('adsbygoogle.js');
+      if (ADS_ENABLED && ADSENSE_CLIENT) {
+        // Site-wide, including pages that carry no units: verification and
+        // policy review expect the tag everywhere.
+        expect(hasScript, `${page.url} is missing the ad script`).toBe(true);
+        expect(page.html).toContain(ADSENSE_CLIENT);
+      } else {
+        expect(hasScript, `${page.url} loads an ad script while ads are off`).toBe(false);
+      }
+    }
+  });
+
+  it('never places an ad unit inside a calculator', () => {
+    // The placement rule the whole ad layout is built around: nothing that can
+    // be mistaken for part of a calculation, and nothing a mistap can reach
+    // from an input.
+    for (const tool of TOOLS) {
+      const page = pages.find((p) => p.url === `/${tool.slug}/`)!;
+      const card = page.html.match(/<div class="calc">[\s\S]*?<div class="tool-body">/);
+      if (!card) continue;
+      expect(card[0], `${tool.slug} has an ad inside the calculator card`).not.toMatch(
+        /class="ad(-slot|-anchor| )/,
+      );
+    }
+  });
+
+  it('keeps ad units off the trust pages', () => {
+    // Someone reading these is deciding whether to believe the numbers.
+    for (const url of ['/about/', '/methodology/', '/privacy/', '/terms/', '/disclaimer/', '/contact/']) {
+      const page = pages.find((p) => p.url === url)!;
+      expect(page.html, `${url} renders an ad unit`).not.toMatch(/class="ad" aria-label/);
+    }
+  });
+
+  it('ships an ads.txt matching the configured publisher', () => {
+    if (!ADS_ENABLED || !ADSENSE_CLIENT) return;
+    const adsTxt = readFileSync(join(DIST, 'ads.txt'), 'utf8');
+    // ads.txt uses the bare publisher ID, without the ca- prefix the script uses.
+    const publisherId = ADSENSE_CLIENT.replace(/^ca-/, '');
+    expect(adsTxt).toMatch(new RegExp(`^google\\.com,\\s*${publisherId},\\s*DIRECT`, 'm'));
   });
 
   it('points robots.txt at the sitemap on the configured origin', () => {

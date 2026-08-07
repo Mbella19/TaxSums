@@ -1,0 +1,9 @@
+# Authorised Digital Sellers — https://iabtechlab.com/ads-txt/
+#
+# Declares who may sell this site's ad inventory. Without it AdSense reports
+# unauthorised inventory and demand drops, so it is not optional once ads run.
+#
+# Format: <exchange domain>, <publisher ID>, <relationship>, <certification ID>
+# f08c47fec0942fa0 is Google's certification authority ID and is the same for
+# every publisher.
+google.com, pub-5145566567335944, DIRECT, f08c47fec0942fa0

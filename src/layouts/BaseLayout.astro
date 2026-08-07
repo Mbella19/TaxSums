@@ -111,10 +111,12 @@ const allSchema = [organisationSchema, ...(breadcrumbSchema ? [breadcrumbSchema]
 
     {
       /*
-       * AdSense is deliberately absent until an account is approved. Ad slots
-       * already reserve their height, so switching this on cannot shift layout.
+       * The script loads on every page, including the ones that carry no ad
+       * units. Verification and policy review expect it site-wide, and `noAds`
+       * is an editorial decision about where units appear — not a reason to
+       * hide the tag from a reviewer reading /about/.
        */
-      ADS_ENABLED && ADSENSE_CLIENT && !noAds && (
+      ADS_ENABLED && ADSENSE_CLIENT && (
         <script is:inline
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}

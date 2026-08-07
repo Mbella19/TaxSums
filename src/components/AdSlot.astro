@@ -18,6 +18,14 @@ const PLACEHOLDER: Record<Props['format'], string> = {
 };
 
 const live = ADS_ENABLED && ADSENSE_CLIENT && slot;
+const preview = !ADS_ENABLED;
+
+/*
+ * Between the two — ads on, but this zone has no slot ID yet — nothing renders
+ * at all. That is the state the site sits in while AdSense reviews it, and an
+ * empty bordered box captioned "970x250 responsive" would look to a reviewer
+ * like a site that was never finished.
+ */
 ---
 
 {
@@ -35,25 +43,27 @@ const live = ADS_ENABLED && ADSENSE_CLIENT && slot;
    * is what stops an advert being read as part of a calculation.
    */
 }
-<aside class="ad" aria-label="Advertisement">
-  <p class="ad-label">Advertisement</p>
-  <div class="ad-slot" data-format={format}>
-    {
-      live ? (
-        <ins
-          class="adsbygoogle"
-          style="display:block;width:100%"
-          data-ad-client={ADSENSE_CLIENT}
-          data-ad-slot={slot}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
-      ) : (
-        <span>{PLACEHOLDER[format]}</span>
-      )
-    }
-  </div>
-</aside>
+{
+  (live || preview) && (
+    <aside class="ad" aria-label="Advertisement">
+      <p class="ad-label">Advertisement</p>
+      <div class="ad-slot" data-format={format}>
+        {live ? (
+          <ins
+            class="adsbygoogle"
+            style="display:block;width:100%"
+            data-ad-client={ADSENSE_CLIENT}
+            data-ad-slot={slot}
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          />
+        ) : (
+          <span>{PLACEHOLDER[format]}</span>
+        )}
+      </div>
+    </aside>
+  )
+}
 
 {
   live && (

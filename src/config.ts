@@ -25,15 +25,25 @@ export const SITE = {
 } as const;
 
 /**
- * AdSense is not wired up yet — the site has no approved publisher account.
+ * AdSense.
  *
- * `AdSlot.astro` renders a reserved, fixed-height container regardless, so
- * enabling ads later cannot shift layout (CLS stays at 0). Flip this flag and
- * set `ADSENSE_CLIENT` once approved; that also switches on the cookie consent
- * banner, which UK GDPR/PECR requires before any ad script may run.
+ * Three states, and the middle one matters:
+ *
+ *  - `ADS_ENABLED = false` — no script, and each zone renders a labelled
+ *    placeholder so ad placement stays visible while developing.
+ *  - `ADS_ENABLED = true`, no slot IDs — the script loads site-wide (which is
+ *    what site verification and review require) but no zone renders anything.
+ *    Empty grey boxes reading "970x250 responsive" would read as a half-built
+ *    site to whoever reviews it.
+ *  - `ADS_ENABLED = true` with slot IDs — real units.
+ *
+ * Consent is handled by Google's own certified CMP, configured under Privacy
+ * and messaging in the AdSense console — not by a banner in this repo. Since
+ * January 2024 Google requires a certified CMP for UK and EEA traffic, and a
+ * hand-rolled banner does not qualify.
  */
-export const ADS_ENABLED = false;
-export const ADSENSE_CLIENT = ''; // e.g. 'ca-pub-0000000000000000'
+export const ADS_ENABLED = true;
+export const ADSENSE_CLIENT = 'ca-pub-5145566567335944';
 
 /** Current tax year shown by default across the site. */
 export const DEFAULT_TAX_YEAR = '2026-27';
