@@ -1,0 +1,178 @@
+---
+import { SITE, ADS_ENABLED, ADSENSE_CLIENT } from '../config';
+import { CATEGORIES } from '../data/site';
+import '../styles/global.css';
+
+export interface Crumb {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  /** Extra JSON-LD blocks, already shaped. */
+  schema?: unknown[];
+  crumbs?: Crumb[];
+  /** Set on pages that must never be indexed. Nothing uses it by default. */
+  noindex?: boolean;
+}
+
+const { title, description, schema = [], crumbs = [], noindex = false } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, SITE.origin).href;
+
+const breadcrumbSchema =
+  crumbs.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [{ label: 'Home', href: '/' }, ...crumbs].map((crumb, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: crumb.label,
+          ...(crumb.href ? { item: new URL(crumb.href, SITE.origin).href } : {}),
+        })),
+      }
+    : null;
+
+const organisationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE.name,
+  url: SITE.origin,
+  description: SITE.description,
+};
+
+const allSchema = [organisationSchema, ...(breadcrumbSchema ? [breadcrumbSchema] : []), ...schema];
+---
+
+<html lang={SITE.lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={SITE.locale} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    {
+      allSchema.map((item) => (
+        <script is:inline type="application/ld+json" set:html={JSON.stringify(item)} />
+      ))
+    }
+
+    {
+      /*
+       * AdSense is deliberately absent until an account is approved. Ad slots
+       * already reserve their height, so switching this on cannot shift layout.
+       */
+      ADS_ENABLED && ADSENSE_CLIENT && (
+        <script is:inline
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+          crossorigin="anonymous"
+        />
+      )
+    }
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="wrap">
+        {/* Split so the second syllable can take the accent colour. */}
+        <a class="brand" href="/">Tax<span>Sums</span></a>
+        <nav class="site-nav" aria-label="Main">
+          {
+            CATEGORIES.map((category) => (
+              <a href={`/${category.slug}/`}>{category.navTitle}</a>
+            ))
+          }
+          <a href="/guides/">Guides</a>
+          <a href="/rates/">Rates</a>
+        </nav>
+      </div>
+    </header>
+
+    {
+      crumbs.length > 0 && (
+        <nav class="breadcrumbs wrap" aria-label="Breadcrumb">
+          <ol>
+            <li>
+              <a href="/">Home</a>
+            </li>
+            {crumbs.map((crumb) => (
+              <li>{crumb.href ? <a href={crumb.href}>{crumb.label}</a> : <span>{crumb.label}</span>}</li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="footer-cols">
+          {
+            CATEGORIES.map((category) => (
+              <div>
+                <h2>{category.navTitle}</h2>
+                <ul>
+                  <li>
+                    <a href={`/${category.slug}/`}>All {category.navTitle.toLowerCase()} tools</a>
+                  </li>
+                </ul>
+              </div>
+            ))
+          }
+          <div>
+            <h2>About</h2>
+            <ul>
+              <li><a href="/about/">About us</a></li>
+              <li><a href="/methodology/">Methodology</a></li>
+              <li><a href="/rates/">Rates and sources</a></li>
+              <li><a href="/changelog/">Rate changelog</a></li>
+              <li><a href="/contact/">Contact</a></li>
+            </ul>
+          </div>
+          <div>
+            <h2>Legal</h2>
+            <ul>
+              <li><a href="/privacy/">Privacy</a></li>
+              <li><a href="/terms/">Terms</a></li>
+              <li><a href="/disclaimer/">Disclaimer</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-legal">
+          <p>
+            <strong>{SITE.name}</strong> gives estimates based on published HMRC, Revenue Scotland
+            and Welsh Revenue Authority figures for the 2026/27 tax year. It is information, not
+            financial or tax advice, and it cannot account for every personal circumstance. Check
+            anything important with an accountant or with HMRC before acting on it.
+          </p>
+          <p>&copy; {new Date().getFullYear()} {SITE.name}. Rates last verified 7 August 2026.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

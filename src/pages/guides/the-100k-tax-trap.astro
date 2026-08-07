@@ -1,0 +1,133 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+import { guideBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+import { calculateIncomeTax } from '../../lib/income-tax';
+
+const guide = guideBySlug('the-100k-tax-trap');
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+
+// Every figure below is computed by the same engine the calculators use.
+const at = (salary: number, region: 'england-nireland' | 'scotland' = 'england-nireland') =>
+  calculateIncomeTax({ grossIncome: salary, region }, YEAR);
+
+const marginalRuk = (at(110_001).total - at(110_000).total) * 100;
+const marginalScot = (at(110_001, 'scotland').total - at(110_000, 'scotland').total) * 100;
+
+const example = { salary: 110_000, contribution: 10_000 };
+const without = at(example.salary);
+const withPension = calculateIncomeTax(
+  {
+    grossIncome: example.salary,
+    region: 'england-nireland',
+    deductibleFromGross: example.contribution,
+  },
+  YEAR,
+);
+const taxSaved = without.total - withPension.total;
+---
+
+<GuideLayout guide={guide} sourceKey="payeAndNi">
+  <p class="tool-standfirst">
+    Between {gbp(100_000)} and {gbp(125_140)} the UK income tax system charges an effective{' '}
+    {marginalRuk.toFixed(0)}% — higher than the 45% additional rate that applies above it. Here is
+    why, and what to do about it.
+  </p>
+
+  <h2>The mechanism</h2>
+  <p>
+    Everyone starts with a personal allowance of {gbp(YEAR.incomeTax.personalAllowance)} — income
+    you pay no tax on. Above {gbp(YEAR.incomeTax.taperThreshold)} of adjusted net income, that
+    allowance is withdrawn at <strong>£1 for every £2</strong> you earn.
+  </p>
+  <p>So earning an extra £100 in this range does two things at once:</p>
+  <ul>
+    <li>The £100 itself is taxed at the higher rate of 40% — that is £40.</li>
+    <li>
+      You lose £50 of personal allowance. That £50, previously untaxed, is now taxed at 40% — a
+      further £20.
+    </li>
+  </ul>
+  <p>
+    £60 of tax on £100 of extra earnings. An effective marginal rate of{' '}
+    <strong>{marginalRuk.toFixed(0)}%</strong>, sustained across the whole{' '}
+    {gbp(125_140 - 100_000)} band until the allowance reaches zero at {gbp(125_140)}.
+  </p>
+
+  <h2>It is worse in Scotland</h2>
+  <p>
+    Scottish taxpayers in this range pay the 45% advanced rate rather than 40%, so the same
+    mechanism produces an effective marginal rate of{' '}
+    <strong>{marginalScot.toFixed(1)}%</strong> — the highest rate anywhere in the UK tax system.
+  </p>
+
+  <h2>The absurd bit</h2>
+  <p>
+    Above {gbp(125_140)} the allowance is gone, so the trap ends and the marginal rate{' '}
+    <em>falls</em> to the 45% additional rate. Someone on {gbp(130_000)} faces a lower marginal rate
+    than someone on {gbp(110_000)}. A pay rise from {gbp(99_000)} to {gbp(105_000)} is worth
+    considerably less after tax than the same rise from {gbp(130_000)} to {gbp(136_000)}.
+  </p>
+
+  <h2>What actually helps</h2>
+
+  <h3>Pension contributions</h3>
+  <p>
+    The trap runs in reverse. A pension contribution reduces your adjusted net income, restoring
+    allowance as it goes — so relief comes at the same {marginalRuk.toFixed(0)}%.
+  </p>
+  <p>
+    On a {gbp(example.salary)} salary, a {gbp(example.contribution)} contribution takes adjusted net
+    income to exactly {gbp(100_000)}. Your personal allowance goes from{' '}
+    {gbp(without.personalAllowance)} back to the full {gbp(withPension.personalAllowance)}, and your
+    income tax bill falls by <strong>{gbp(taxSaved)}</strong>. That is{' '}
+    {((taxSaved / example.contribution) * 100).toFixed(0)}% relief on money you keep — it has gone
+    into your pension, not to HMRC.
+  </p>
+  <p>
+    All three pension arrangements achieve this, because all three reduce adjusted net income. Under
+    relief at source you must claim the extra through Self Assessment; it does not happen
+    automatically.
+  </p>
+
+  <h3>Salary sacrifice on a bonus</h3>
+  <p>
+    If a bonus is what pushes you over {gbp(100_000)}, sacrificing it into your pension before it is
+    paid avoids the trap entirely, and saves National Insurance as well — the only pension
+    arrangement that does.
+  </p>
+
+  <h3>Gift Aid donations</h3>
+  <p>
+    Charitable donations under Gift Aid also reduce adjusted net income, extending your basic rate
+    band by the grossed-up amount. The mechanism is the same as relief at source.
+  </p>
+
+  <h3>The childcare cliff</h3>
+  <p>
+    If you have young children the trap is sharper still. Tax-Free Childcare and the 30 free hours
+    are both lost outright once <em>either</em> parent's adjusted net income exceeds{' '}
+    {gbp(100_000)}. There is no taper — it is a cliff. For a family with two children in nursery
+    this can be worth several thousand pounds a year, which means the true effective rate just over{' '}
+    {gbp(100_000)} can exceed 100%. Earning more genuinely leaves some families worse off.
+  </p>
+  <p>
+    A pension contribution that brings adjusted net income back below {gbp(100_000)} restores both.
+    It is one of the few places in the tax system where the arithmetic is this stark.
+  </p>
+
+  <h2>What counts as adjusted net income</h2>
+  <p>
+    Not just salary. It includes bonuses, taxable benefits in kind such as a company car, rental
+    profit, dividends and savings interest — then subtracts gross pension contributions and Gift Aid
+    donations. It is the pension and Gift Aid deductions that give you a lever.
+  </p>
+
+  <div class="note">
+    <strong>Check before the tax year ends</strong>
+    <p>
+      A pension contribution only affects the year it is paid in. If you are heading into the trap,
+      the time to act is before 5 April — not when you file your return the following January.
+    </p>
+  </div>
+</GuideLayout>

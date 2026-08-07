@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "taxsums",
+  "compatibility_date": "2026-08-07",
+
+  // The apex is the canonical host — every <link rel="canonical"> and every
+  // sitemap URL points here. www is handled by a redirect rule rather than a
+  // second custom domain, so the two hostnames never serve duplicate content.
+  "routes": [{ "pattern": "taxsums.co.uk", "custom_domain": true }],
+
+  // A purely static site — no Worker script, just assets served from the edge.
+  // Cloudflare recommends Workers over Pages for new projects, and Workers
+  // Static Assets reads the same `_headers` file, so the caching rules in
+  // public/_headers apply here unchanged.
+  "assets": {
+    "directory": "./dist",
+
+    // Astro builds with trailingSlash: 'always' and format: 'directory', so
+    // every page is dist/<route>/index.html. This serves those and redirects
+    // /route to /route/, which is what our canonical tags point at.
+    "html_handling": "auto-trailing-slash",
+
+    // Serve the real 404 page, with a 404 status, for anything unmatched.
+    "not_found_handling": "404-page"
+  }
+}

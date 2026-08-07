@@ -1,0 +1,47 @@
+---
+import { ADS_ENABLED, ADSENSE_CLIENT } from '../config';
+
+interface Props {
+  format: 'leaderboard' | 'rectangle' | 'sidebar';
+  /** AdSense slot ID. Only used once ADS_ENABLED is true. */
+  slot?: string;
+}
+
+const { format, slot } = Astro.props;
+---
+
+{
+  /*
+   * The container reserves its height whether or not an ad is served, so
+   * enabling AdSense later cannot move content under a reader's finger.
+   * Cumulative Layout Shift stays at zero either way.
+   *
+   * Placement rule followed throughout: never directly above or beside a
+   * calculator's result, and never so close to an input that a mistap is
+   * plausible. That is both an AdSense policy matter and a usability one.
+   */
+}
+<aside class="ad-slot" data-format={format} aria-hidden="true">
+  {
+    ADS_ENABLED && ADSENSE_CLIENT && slot ? (
+      <ins
+        class="adsbygoogle"
+        style="display:block;width:100%"
+        data-ad-client={ADSENSE_CLIENT}
+        data-ad-slot={slot}
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
+    ) : (
+      <span>Advertisement</span>
+    )
+  }
+</aside>
+
+{
+  ADS_ENABLED && ADSENSE_CLIENT && slot && (
+    <script is:inline>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  )
+}

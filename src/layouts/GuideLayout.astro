@@ -1,0 +1,80 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import AdSlot from '../components/AdSlot.astro';
+import RateProvenance from '../components/RateProvenance.astro';
+import { SITE } from '../config';
+import { toolBySlug, type Guide } from '../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+
+interface Props {
+  guide: Guide;
+  sourceKey: string;
+}
+
+const { guide, sourceKey } = Astro.props;
+const tools = guide.relatedTools.map(toolBySlug);
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: guide.h1,
+  description: guide.metaDescription,
+  inLanguage: SITE.lang,
+  datePublished: '2026-08-07',
+  dateModified: '2026-08-07',
+  author: { '@type': 'Organization', name: SITE.author.name, url: new URL(SITE.author.url, SITE.origin).href },
+  publisher: { '@type': 'Organization', name: SITE.name, url: SITE.origin },
+  mainEntityOfPage: new URL(`/guides/${guide.slug}/`, SITE.origin).href,
+};
+---
+
+<BaseLayout
+  title={guide.title}
+  description={guide.metaDescription}
+  schema={[articleSchema]}
+  crumbs={[{ label: 'Guides', href: '/guides/' }, { label: guide.shortName }]}
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>{guide.h1}</h1>
+      <RateProvenance sourceKey={sourceKey} />
+    </div>
+
+    <div class="tool-body">
+      <div>
+        <article class="prose">
+          <slot />
+        </article>
+
+        <AdSlot format="rectangle" />
+
+        <section>
+          <h2>Work out your own numbers</h2>
+          <ul class="card-grid">
+            {
+              tools.map((tool) => (
+                <li>
+                  <a class="card" href={`/${tool.slug}/`}>
+                    <strong>{tool.h1}</strong>
+                    <span>{tool.standfirst}</span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <p class="verified">
+          <span>
+            Tax year {YEAR.label} &middot; <a href="/rates/">All rates and sources</a> &middot;{' '}
+            <a href="/guides/">More guides</a>
+          </span>
+        </p>
+      </div>
+
+      <aside class="tool-aside">
+        <AdSlot format="sidebar" />
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

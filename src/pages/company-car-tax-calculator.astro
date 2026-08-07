@@ -1,0 +1,225 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Faq from '../components/Faq.astro';
+import CompanyCarCalculator from '../components/calculators/CompanyCarCalculator';
+import { toolBySlug } from '../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+import { appropriatePercentage } from '../lib/company-car';
+
+const tool = toolBySlug('company-car-tax-calculator');
+const cars = YEAR.companyCars;
+const gbp = (n: number) => `£${n.toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(0)}%`;
+
+const co2Examples = [55, 75, 95, 110, 130, 150, 165];
+---
+
+<ToolLayout tool={tool}>
+  <CompanyCarCalculator slot="calculator" client:load />
+
+  <Fragment slot="explanation">
+    <h2>How company car tax works</h2>
+    <p>
+      A company car you can use privately is a taxable benefit. Its value is your car's P11D price
+      multiplied by an "appropriate percentage" set by its emissions. You pay income tax on that
+      value at your marginal rate; your employer pays Class 1A National Insurance at{' '}
+      {pct(YEAR.nationalInsurance.employer.class1aRate)} on the same figure.
+    </p>
+    <p>
+      The P11D value is the manufacturer's list price including VAT, delivery and any optional
+      extras — <strong>not</strong> what your employer actually paid. Fleet discounts do not reduce
+      your tax bill.
+    </p>
+
+    <h3>Three different rules, depending on the car</h3>
+    <ul>
+      <li>
+        <strong>Zero emission.</strong> A flat {pct(cars.zeroEmissionPercentage)} for {YEAR.label},
+        up from 3% last year.
+      </li>
+      <li>
+        <strong>1 to 50 g/km.</strong> Banded by <em>electric-only range</em>, not by CO2. Two
+        plug-in hybrids with identical emissions can be taxed at {pct(0.04)} or {pct(0.16)}{' '}
+        depending on how far they go on the battery — a four-fold difference.
+      </li>
+      <li>
+        <strong>51 g/km and above.</strong> A CO2 ladder rising to a maximum of{' '}
+        {pct(cars.maximumPercentage)}, plus {pct(cars.dieselSupplement)} for diesels that do not
+        meet the RDE2 standard.
+      </li>
+    </ul>
+
+    <h3>The flat spot at 70–79 g/km</h3>
+    <p>
+      For {YEAR.label}, bands below 75 g/km rose by one percentage point while those at 75 g/km and
+      above were frozen at last year's levels. The result is an unusual flat spot:{' '}
+      <strong>70–74 g/km and 75–79 g/km both sit at {pct(0.21)}</strong>. It is not an error in the
+      table, it is a consequence of the freeze.
+    </p>
+
+    <h3>Why electric is still so much cheaper</h3>
+    <p>
+      At {pct(cars.zeroEmissionPercentage)} against up to {pct(cars.maximumPercentage)}, an electric
+      company car can cost less than a fifth of the tax of a petrol equivalent. On a{' '}
+      {gbp(40000)} car a higher rate taxpayer pays about {gbp(640)} a year electric, against roughly{' '}
+      {gbp(5920)} for a car at the top of the CO2 ladder.
+    </p>
+    <p>
+      The rate rises to 5% in 2027/28 and then by two points a year to 9% by 2029/30, so the
+      advantage narrows — but it remains substantial, and the rate is fixed for the life of the
+      car in the year you are taxed, not locked in at purchase.
+    </p>
+
+    <h3>Free private fuel is usually a bad deal</h3>
+    <p>
+      If your employer pays for private fuel, you are taxed on a flat{' '}
+      {gbp(cars.fuelBenefitMultiplier)} multiplied by your car's appropriate percentage —
+      regardless of how much fuel you actually use. Unless your private mileage is very high, paying
+      for your own fuel costs less than the tax. There is no fuel benefit charge on an electric car,
+      because electricity is not treated as a fuel for this purpose.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>{YEAR.label} appropriate percentages</h2>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Zero emission and plug-in hybrid cars</caption>
+        <thead>
+          <tr>
+            <th scope="col">Car</th>
+            <th scope="col">Appropriate percentage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0 g/km (fully electric)</td>
+            <td>{pct(cars.zeroEmissionPercentage)}</td>
+          </tr>
+          {
+            cars.hybridBands.map((band) => (
+              <tr>
+                <td>
+                  1–50 g/km,{' '}
+                  {band.maxElectricRange === null
+                    ? `${band.minElectricRange} miles or more electric range`
+                    : `${band.minElectricRange}–${band.maxElectricRange} miles electric range`}
+                </td>
+                <td>{pct(band.percentage)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Petrol and diesel cars — selected CO2 bands</caption>
+        <thead>
+          <tr>
+            <th scope="col">CO2 (g/km)</th>
+            <th scope="col">Petrol / RDE2 diesel</th>
+            <th scope="col">Non-RDE2 diesel</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            co2Examples.map((co2) => (
+              <tr>
+                <td>{co2}</td>
+                <td>{pct(appropriatePercentage({ fuelType: 'petrol', co2 }, YEAR).percentage)}</td>
+                <td>{pct(appropriatePercentage({ fuelType: 'diesel', co2 }, YEAR).percentage)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Other {YEAR.label} figures</caption>
+        <tbody>
+          <tr><td>Car fuel benefit multiplier</td><td>{gbp(cars.fuelBenefitMultiplier)}</td></tr>
+          <tr><td>Van benefit charge</td><td>{gbp(cars.vanBenefitCharge)}</td></tr>
+          <tr><td>Van fuel benefit charge</td><td>{gbp(cars.vanFuelBenefitCharge)}</td></tr>
+          <tr><td>Employer Class 1A rate</td><td>{pct(YEAR.nationalInsurance.employer.class1aRate)}</td></tr>
+          <tr><td>Maximum appropriate percentage</td><td>{pct(cars.maximumPercentage)}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>What this calculator does not cover</h2>
+    <ul>
+      <li>
+        <strong>Capital contributions.</strong> Paying towards the cost of the car, up to{' '}
+        {gbp(5000)}, reduces the P11D value. Enter the reduced figure if this applies.
+      </li>
+      <li>
+        <strong>Private use contributions.</strong> Payments you make to your employer for private
+        use reduce the taxable benefit pound for pound.
+      </li>
+      <li>
+        <strong>Part-year availability.</strong> If the car was not available all year the benefit is
+        apportioned by the days it was.
+      </li>
+      <li>
+        <strong>Pool cars.</strong> A genuine pool car available to several employees, kept at the
+        workplace and not used privately, is not a benefit at all.
+      </li>
+      <li>
+        <strong>Classic cars</strong> over 15 years old and worth more than {gbp(15000)} use market
+        value rather than list price.
+      </li>
+      <li>
+        <strong>Salary sacrifice car schemes.</strong> Since 2017 most are taxed on the higher of
+        the benefit value and the salary given up — though ultra-low emission vehicles are exempt
+        from that rule, which is why electric car salary sacrifice schemes remain popular.
+      </li>
+    </ul>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'What is the electric company car tax rate for 2026/27?',
+        answer: `${pct(cars.zeroEmissionPercentage)} of the car's P11D value, up from 3% in 2025/26. It rises to 5% in 2027/28, then by two percentage points a year to 9% in 2029/30. On a £40,000 electric car that is £1,600 of taxable benefit — £320 a year for a basic rate taxpayer.`,
+      },
+      {
+        question: 'How is the P11D value worked out?',
+        answer:
+          "The manufacturer's list price including VAT, delivery and all optional extras fitted, less any capital contribution you made up to £5,000. It is not the price your employer paid, so fleet discounts make no difference to your tax.",
+      },
+      {
+        question: 'Why do two plug-in hybrids with the same CO2 have different tax?',
+        answer:
+          'Because cars emitting 1 to 50 g/km are banded by electric-only range rather than emissions. A hybrid doing 130+ miles on the battery is charged 4%; one doing under 30 miles is charged 16%. Check the official electric range before ordering — it matters more than the CO2 figure.',
+      },
+      {
+        question: 'Do I pay National Insurance on a company car?',
+        answer:
+          'No. Employees pay income tax on the benefit but no National Insurance. Your employer pays Class 1A at 15% instead. That is why a company car is more tax-efficient than the equivalent salary for the employee.',
+      },
+      {
+        question: 'Is free fuel worth taking?',
+        answer:
+          "Usually not. The charge is a flat £29,200 multiplied by your car's appropriate percentage, whatever your actual mileage. A higher rate taxpayer with a 30% car pays about £3,504 a year in tax for it — which buys a lot of petrol. Only very high private mileage makes it worthwhile.",
+      },
+      {
+        question: 'Is an electric car salary sacrifice scheme worth it?',
+        answer:
+          'Often yes. Ultra-low emission vehicles are exempt from the 2017 rules that otherwise tax salary sacrifice cars on the salary given up, so you save income tax and National Insurance on the sacrificed amount and pay only 4% benefit in kind. It is one of the few remaining genuinely generous UK tax breaks.',
+      },
+      {
+        question: 'Should I take a car allowance instead?',
+        answer:
+          'A cash allowance is ordinary salary — fully taxed with National Insurance — but you own the car and can claim mileage relief at 55p a mile for the first 10,000 business miles. For low-emission cars the company car usually wins; for high-emission cars or low business mileage, the allowance often does.',
+      },
+    ]}
+  />
+</ToolLayout>

@@ -1,0 +1,42 @@
+---
+export interface FaqItem {
+  question: string;
+  /** May contain simple inline HTML. Stripped to plain text for the schema. */
+  answer: string;
+}
+
+interface Props {
+  items: FaqItem[];
+  heading?: string;
+}
+
+const { items, heading = 'Frequently asked questions' } = Astro.props;
+
+// Schema and visible copy come from one array, so they can never disagree —
+// which is exactly what Google's structured data guidelines require.
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: items.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer.replace(/<[^>]+>/g, ''),
+    },
+  })),
+};
+---
+
+<section class="faq deferred" aria-labelledby="faq-heading">
+  <h2 id="faq-heading">{heading}</h2>
+  {
+    items.map((item) => (
+      <details>
+        <summary>{item.question}</summary>
+        <p set:html={item.answer} />
+      </details>
+    ))
+  }
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+</section>

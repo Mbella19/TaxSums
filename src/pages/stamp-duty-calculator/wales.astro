@@ -1,0 +1,201 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import Faq from '../../components/Faq.astro';
+import StampDutyCalculator from '../../components/calculators/StampDutyCalculator';
+import { toolBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+import { calculatePropertyTax } from '../../lib/property-tax';
+
+const tool = toolBySlug('stamp-duty-calculator/wales');
+const rules = YEAR.propertyTax.wales;
+const higher = rules.additionalProperty as {
+  kind: 'separate-bands';
+  bands: readonly { upTo: number | null; rate: number; label: string }[];
+  minimumPrice: number;
+};
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(1).replace(/\.0$/, '')}%`;
+
+const examples = [180000, 225000, 300000, 450000, 700000].map((price) => ({
+  price,
+  mover: calculatePropertyTax({ price, region: 'wales' }, YEAR).total,
+  england: calculatePropertyTax({ price, region: 'england-nireland' }, YEAR).total,
+  additional: calculatePropertyTax({ price, region: 'wales', additionalProperty: true }, YEAR).total,
+}));
+---
+
+<ToolLayout tool={tool}>
+  <StampDutyCalculator slot="calculator" region="wales" client:load />
+
+  <Fragment slot="explanation">
+    <h2>Wales charges Land Transaction Tax</h2>
+    <p>
+      LTT replaced Stamp Duty Land Tax in Wales in April 2018 and is collected by the Welsh Revenue
+      Authority. If you are buying a Welsh property, SDLT does not apply at all — and an
+      England-shaped stamp duty calculator will give you the wrong figure.
+    </p>
+
+    <h3>The highest nil-rate band in the UK</h3>
+    <p>
+      Wales charges nothing on the first {gbp(rules.standardBands[0]!.upTo!)} of a purchase, the
+      most generous starting point of the four nations. England's nil-rate band stops at{' '}
+      {gbp(125000)} and Scotland's at {gbp(145000)}. On a {gbp(225000)} purchase a Welsh buyer pays
+      nothing while an English buyer pays {gbp(calculatePropertyTax({ price: 225000, region: 'england-nireland' }, YEAR).total)}.
+    </p>
+
+    <h3>No first-time buyer relief — and why it usually does not matter</h3>
+    <p>
+      Wales is the only UK nation with no first-time buyer relief. That sounds worse than it is:
+      because the nil-rate band is already {gbp(225000)}, most Welsh first-time buyers pay no LTT
+      anyway. The median Welsh house price sits below that threshold, so a relief would be
+      redundant for the majority of purchases.
+    </p>
+
+    <h3>Higher rates use a completely separate table</h3>
+    <p>
+      This is where Wales differs most sharply. England adds 5 points to each band and Scotland
+      charges a flat 8% supplement. Wales replaced its old flat 4% surcharge on 11 December 2024
+      with an <strong>entirely separate band table</strong> running from {pct(0.05)} to{' '}
+      {pct(0.17)}.
+    </p>
+    <p>
+      Crucially, the higher rates have <strong>no nil-rate band</strong>. A {gbp(150000)} buy-to-let
+      that would attract no LTT as a main home is charged {pct(0.05)} from the first pound —{' '}
+      {gbp(calculatePropertyTax({ price: 150000, region: 'wales', additionalProperty: true }, YEAR).total)}.
+      The higher rates apply from {gbp(higher.minimumPrice)}.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>LTT rates for {YEAR.label}</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>Main residential rates — from 10 October 2022</caption>
+        <thead>
+          <tr>
+            <th scope="col">Portion of the price</th>
+            <th scope="col">Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            rules.standardBands.map((band, index, bands) => {
+              const from = index === 0 ? 0 : (bands[index - 1]!.upTo ?? 0);
+              return (
+                <tr>
+                  <td>
+                    {gbp(from)}{band.upTo === null ? ' and above' : ` to ${gbp(band.upTo)}`}
+                  </td>
+                  <td>{pct(band.rate)}</td>
+                </tr>
+              );
+            })
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Higher residential rates — from 11 December 2024</caption>
+        <thead>
+          <tr>
+            <th scope="col">Portion of the price</th>
+            <th scope="col">Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            higher.bands.map((band, index, bands) => {
+              const from = index === 0 ? 0 : (bands[index - 1]!.upTo ?? 0);
+              return (
+                <tr>
+                  <td>
+                    {gbp(from)}{band.upTo === null ? ' and above' : ` to ${gbp(band.upTo)}`}
+                  </td>
+                  <td>{pct(band.rate)}</td>
+                </tr>
+              );
+            })
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Wales compared with England at common prices</caption>
+        <thead>
+          <tr>
+            <th scope="col">Price</th>
+            <th scope="col">Wales (LTT)</th>
+            <th scope="col">England (SDLT)</th>
+            <th scope="col">Wales, second home</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            examples.map((row) => (
+              <tr>
+                <td>{gbp(row.price)}</td>
+                <td>{gbp(row.mover)}</td>
+                <td>{gbp(row.england)}</td>
+                <td>{gbp(row.additional)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>What this calculator does not cover</h2>
+    <ul>
+      <li><strong>Non-residential and mixed-use property</strong>, which has separate bands.</li>
+      <li><strong>Leases</strong>, where LTT can apply to the net present value of the rent.</li>
+      <li>
+        <strong>Multiple dwellings relief</strong> and the other reliefs claimed on the return.
+      </li>
+      <li>
+        <strong>Local council tax premiums.</strong> Several Welsh councils charge up to 300%
+        council tax on second homes and long-term empty properties. That is not LTT, but it is a
+        much larger annual cost than the purchase tax for many second-home buyers.
+      </li>
+    </ul>
+    <p>
+      An LTT return must be filed and the tax paid within 30 days of completion.
+    </p>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'Do first-time buyers pay LTT in Wales?',
+        answer:
+          'There is no specific first-time buyer relief in Wales, but the £225,000 nil-rate band is the highest in the UK, so most Welsh first-time buyers pay nothing regardless. Above £225,000 a first-time buyer pays the same as anyone else moving home.',
+      },
+      {
+        question: 'How much extra is LTT on a second home in Wales?',
+        answer:
+          'Wales uses a completely separate higher-rate band table rather than adding a surcharge. It starts at 5% from the first pound — there is no nil-rate band — and rises to 17% above £1.5m. That makes cheap buy-to-lets relatively more expensive in Wales than elsewhere.',
+      },
+      {
+        question: 'Is Wales cheaper than England for stamp duty?',
+        answer:
+          'Below about £400,000 usually yes, because of the higher nil-rate band. Above that England often works out cheaper, since Wales charges 6% from £225,000 while England is still at 2% until £250,000 and 5% thereafter. The comparison table in the calculator shows both.',
+      },
+      {
+        question: 'When did the Welsh higher rates change?',
+        answer:
+          'On 11 December 2024, when the flat 4% surcharge was replaced by the current banded higher rates of 5% to 17%. Guidance written before that date is out of date, which is worth knowing if you are reading older articles.',
+      },
+      {
+        question: 'Do I pay LTT or SDLT if I live in England but buy in Wales?',
+        answer:
+          'LTT. The tax follows where the property is, not where the buyer lives. A Welsh property is always LTT even if every party to the transaction is English.',
+      },
+    ]}
+  />
+</ToolLayout>

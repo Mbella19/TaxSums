@@ -1,0 +1,90 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../config';
+---
+
+<BaseLayout
+  title={`Terms of Use | ${SITE.name}`}
+  description="The terms on which you may use this site and its calculators."
+  crumbs={[{ label: 'Terms' }]}
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>Terms of use</h1>
+      <p class="tool-standfirst">Last updated 7 August 2026.</p>
+    </div>
+
+    <div class="tool-body">
+      <div class="prose">
+        <h2>Using this site</h2>
+        <p>
+          {SITE.name} is free to use. There is no account, no subscription and no paywall. By using
+          the site you accept these terms.
+        </p>
+
+        <h2>Information, not advice</h2>
+        <p>
+          Everything here is general information about UK tax. It is <strong>not</strong> financial,
+          tax, legal or investment advice, and it does not take account of your circumstances. We are
+          not regulated by the Financial Conduct Authority and we do not provide regulated advice.
+        </p>
+        <p>
+          Before acting on anything you read here, check it with a qualified accountant, a regulated
+          financial adviser, or HMRC. See our <a href="/disclaimer/">disclaimer</a>.
+        </p>
+
+        <h2>Accuracy</h2>
+        <p>
+          We take considerable care to be accurate: rates come from primary sources, are dated, and
+          the calculation engine is covered by unit tests built from HMRC worked examples.
+          <a href="/methodology/">Read the methodology</a>.
+        </p>
+        <p>
+          Even so, we cannot guarantee that every figure is correct or current. Tax rules change,
+          sometimes mid-year, and no calculator can capture every personal circumstance. Use these
+          tools as estimates, not as the final word.
+        </p>
+
+        <h2>Liability</h2>
+        <p>
+          To the extent permitted by law, we are not liable for any loss arising from use of this
+          site or reliance on its content. That includes decisions about employment, property
+          purchases, incorporation, pensions or tax filings. Nothing here limits liability for death,
+          personal injury or fraud caused by our negligence, which cannot lawfully be excluded.
+        </p>
+
+        <h2>Content and copyright</h2>
+        <p>
+          The text, design and code of this site belong to us. You may read it, print it and share
+          links freely. You may not republish substantial portions as your own, or copy the
+          calculators for a competing site.
+        </p>
+        <p>
+          Tax rates and thresholds are facts published by government and belong to nobody. Quoting
+          our figures with a link back is welcome.
+        </p>
+
+        <h2>Availability</h2>
+        <p>
+          We aim to keep the site available but do not guarantee it. We may change, suspend or
+          withdraw any part of it without notice.
+        </p>
+
+        <h2>External links</h2>
+        <p>
+          We link to gov.uk, Revenue Scotland, the Welsh Revenue Authority and similar sources. We
+          are not responsible for their content, and a link is not an endorsement.
+        </p>
+
+        <h2>Governing law</h2>
+        <p>
+          These terms are governed by the law of England and Wales, and the courts of England and
+          Wales have exclusive jurisdiction.
+        </p>
+
+        <h2>Contact</h2>
+        <p><a href="/contact/">Get in touch</a></p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

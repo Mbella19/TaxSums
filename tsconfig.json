@@ -1,0 +1,11 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"],
+  "compilerOptions": {
+    // Calculator islands are Preact, not React. Without these the JSX in
+    // src/components/calculators/*.tsx has no element types at all.
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  }
+}

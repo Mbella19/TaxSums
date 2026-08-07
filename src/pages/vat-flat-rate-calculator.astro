@@ -1,0 +1,198 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Faq from '../components/Faq.astro';
+import VatFlatRateCalculator from '../components/calculators/VatFlatRateCalculator';
+import { toolBySlug } from '../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+import { effectiveRateOnNetTurnover, FLAT_RATE_SECTORS } from '../lib/vat';
+
+const tool = toolBySlug('vat-flat-rate-calculator');
+const gbp = (n: number) => `£${n.toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(1).replace(/\.0$/, '')}%`;
+
+const commonSectors = FLAT_RATE_SECTORS.filter((s) =>
+  [
+    'Accountancy or book-keeping',
+    'Computer and IT consultancy or data processing',
+    'Management consultancy',
+    'General building or construction services',
+    'Hairdressing or other beauty treatment services',
+    'Photography',
+    'Retailing not listed elsewhere',
+    'Transport or storage, including couriers, freight, removals and taxis',
+    'Any other activity not listed elsewhere',
+  ].includes(s.name),
+);
+---
+
+<ToolLayout tool={tool}>
+  <VatFlatRateCalculator slot="calculator" client:load />
+
+  <Fragment slot="explanation">
+    <h2>How the Flat Rate Scheme works</h2>
+    <p>
+      Under standard VAT accounting you charge 20% on sales, reclaim the VAT on purchases, and pay
+      HMRC the difference. Under the Flat Rate Scheme you still charge customers 20%, but you hand
+      HMRC a fixed percentage of your turnover and reclaim nothing on purchases (other than capital
+      assets over {gbp(2000)}). The appeal is simplicity, and for some businesses a small profit.
+    </p>
+
+    <h3>The percentage is not what it appears</h3>
+    <p>
+      This trips almost everyone up. The flat rate applies to your VAT-<strong>inclusive</strong>{' '}
+      turnover, not your net sales. A headline rate of 14.5% is really{' '}
+      {pct(effectiveRateOnNetTurnover(0.145, YEAR))} of what you actually invoice before VAT,
+      because 14.5% of 120 is 17.4% of 100.
+    </p>
+
+    <h3>The limited cost trader rule</h3>
+    <p>
+      Introduced in April 2017 specifically to stop consultants and contractors profiting from the
+      scheme. If your spend on <strong>goods</strong> is less than 2% of gross turnover, or less
+      than {gbp(YEAR.vat.limitedCostTraderGoodsFloor)} a year, whichever is greater, you pay{' '}
+      {pct(YEAR.vat.limitedCostTraderRate)} regardless of your sector.
+    </p>
+    <p>
+      That is {pct(effectiveRateOnNetTurnover(YEAR.vat.limitedCostTraderRate, YEAR))} of net sales,
+      against the 20% you charged. It leaves you almost nothing while removing your ability to
+      reclaim input VAT — so for most service businesses the scheme is now a loss.
+    </p>
+    <p>
+      The definition of goods is narrow and catches people out. It <strong>excludes</strong>{' '}
+      software and downloads, rent, phone and broadband, travel and fuel, accountancy and other
+      professional services, marketing, subcontractors, and any capital item. Physical stock,
+      stationery, cleaning products and materials count.
+    </p>
+
+    <h3>When the scheme still wins</h3>
+    <p>
+      When your sector rate is low relative to what you charge and you have genuinely little input
+      VAT to reclaim — but enough goods spend to avoid the limited cost trader rule. Retailers and
+      trades buying materials are the usual beneficiaries. There is also a 1 percentage point
+      discount for the first year of VAT registration.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>Common flat rate percentages</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>
+          The effective rate is what the percentage actually costs you as a share of net sales
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Sector</th>
+            <th scope="col">Flat rate</th>
+            <th scope="col">Effective on net sales</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            commonSectors.map((sector) => (
+              <tr>
+                <td style="white-space:normal;text-align:left;max-width:24rem">{sector.name}</td>
+                <td>{pct(sector.rate)}</td>
+                <td>{pct(effectiveRateOnNetTurnover(sector.rate, YEAR))}</td>
+              </tr>
+            ))
+          }
+          <tr>
+            <td style="white-space:normal;text-align:left">
+              <strong>Limited cost trader (any sector)</strong>
+            </td>
+            <td>{pct(YEAR.vat.limitedCostTraderRate)}</td>
+            <td>{pct(effectiveRateOnNetTurnover(YEAR.vat.limitedCostTraderRate, YEAR))}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>VAT thresholds for {YEAR.label}</caption>
+        <tbody>
+          <tr>
+            <td>Compulsory registration</td>
+            <td>{gbp(YEAR.vat.registrationThreshold)} rolling 12-month turnover</td>
+          </tr>
+          <tr>
+            <td>Deregistration</td>
+            <td>{gbp(YEAR.vat.deregistrationThreshold)}</td>
+          </tr>
+          <tr>
+            <td>Join the Flat Rate Scheme</td>
+            <td>{gbp(YEAR.vat.flatRateJoinThreshold)} or less, excluding VAT</td>
+          </tr>
+          <tr>
+            <td>Must leave the Flat Rate Scheme</td>
+            <td>Above {gbp(YEAR.vat.flatRateLeaveThreshold)} including VAT</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>What this calculator does not cover</h2>
+    <ul>
+      <li>
+        <strong>Capital assets over {gbp(2000)}.</strong> You can still reclaim VAT on a single
+        purchase of capital goods costing {gbp(2000)} or more including VAT, even on the scheme.
+      </li>
+      <li>
+        <strong>Zero-rated and exempt sales.</strong> The flat rate applies to all turnover
+        including zero-rated sales, which usually makes the scheme a poor fit for businesses with
+        significant zero-rated income.
+      </li>
+      <li>
+        <strong>Mixed sector businesses.</strong> If you do more than one thing you use the rate for
+        the activity making up the greater part of turnover, which can be a judgement call.
+      </li>
+      <li>
+        <strong>Making Tax Digital.</strong> You must still keep digital records and file through
+        compatible software, whichever scheme you use.
+      </li>
+      <li>
+        <strong>The limited cost test is applied each period</strong>, not annually. A business can
+        move in and out of the 16.5% rate quarter by quarter.
+      </li>
+    </ul>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'Is the VAT Flat Rate Scheme worth it for a consultant?',
+        answer:
+          'Almost never since April 2017. Consultants rarely spend enough on physical goods to escape the limited cost trader rule, so they pay 16.5% of gross turnover — about 19.8% of net sales — while being unable to reclaim any input VAT. Standard accounting is usually better.',
+      },
+      {
+        question: 'What counts as goods for the limited cost trader test?',
+        answer:
+          'Physical items used in the business: stock, materials, stationery, cleaning products, office supplies. It excludes services of any kind, plus food and drink, vehicles and fuel (unless you are a transport business), and any capital item. Software, rent, phone bills, accountancy and subcontractors do not count.',
+      },
+      {
+        question: 'Why is a 14.5% flat rate really 17.4%?',
+        answer:
+          'Because the flat rate applies to your VAT-inclusive turnover. On £100,000 of net sales you invoice £120,000 including VAT, and 14.5% of £120,000 is £17,400 — 17.4% of the £100,000 you actually earned.',
+      },
+      {
+        question: 'Can I leave the Flat Rate Scheme?',
+        answer:
+          'Yes, at any time, by writing to HMRC. You must leave if your gross turnover in the last 12 months exceeded £230,000, or if you expect it to exceed that in the next 30 days. Once you leave voluntarily you cannot rejoin for 12 months.',
+      },
+      {
+        question: 'Do I still charge my customers 20%?',
+        answer:
+          'Yes. Your invoices are unchanged and your customers still reclaim the full 20% if they are VAT registered. The scheme only changes what you hand over to HMRC and your ability to reclaim input VAT.',
+      },
+      {
+        question: 'Should I register for VAT voluntarily?',
+        answer:
+          'It depends on your customers. If they are VAT-registered businesses, registering lets you reclaim input VAT at no real cost to them. If they are consumers, registering means either a 20% price rise or a 17% cut in your margin, so voluntary registration usually hurts.',
+      },
+    ]}
+  />
+</ToolLayout>

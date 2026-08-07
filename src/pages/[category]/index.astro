@@ -1,0 +1,97 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { CATEGORIES, GUIDES, toolsInCategory, type Category } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+
+export function getStaticPaths() {
+  return CATEGORIES.map((category) => ({
+    params: { category: category.slug },
+    props: { category },
+  }));
+}
+
+interface Props {
+  category: Category;
+}
+
+const { category } = Astro.props;
+const tools = toolsInCategory(category.slug);
+
+// Guides that point at any tool in this category belong on this page too.
+const guides = GUIDES.filter((guide) =>
+  guide.relatedTools.some((slug) => tools.some((tool) => tool.slug === slug)),
+);
+
+const listSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: category.title,
+  itemListElement: tools.map((tool, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: tool.h1,
+    url: new URL(`/${tool.slug}/`, Astro.site).href,
+  })),
+};
+---
+
+<BaseLayout
+  title={`${category.title} ${YEAR.label} | TaxSums`}
+  description={category.description}
+  schema={[listSchema]}
+  crumbs={[{ label: category.navTitle }]}
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>{category.title}</h1>
+      <p class="tool-standfirst">{category.description}</p>
+    </div>
+
+    <ul class="card-grid">
+      {
+        tools.map((tool) => (
+          <li>
+            <a class="card" href={`/${tool.slug}/`}>
+              <strong>{tool.h1}</strong>
+              <span>{tool.standfirst}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <AdSlot format="leaderboard" />
+
+    {
+      guides.length > 0 && (
+        <section class="deferred">
+          <h2>Guides</h2>
+          <ul class="card-grid">
+            {guides.map((guide) => (
+              <li>
+                <a class="card" href={`/guides/${guide.slug}/`}>
+                  <strong>{guide.h1}</strong>
+                  <span>{guide.metaDescription}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <section class="prose deferred">
+      <h2>Other calculators</h2>
+      <ul>
+        {
+          CATEGORIES.filter((c) => c.slug !== category.slug).map((other) => (
+            <li>
+              <a href={`/${other.slug}/`}>{other.title}</a> — {other.description}
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

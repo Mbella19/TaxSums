@@ -1,0 +1,230 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+
+const gbp = (n: number) => `£${n.toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
+const sources = Object.entries(YEAR.sources);
+---
+
+<BaseLayout
+  title={`Every UK Tax Rate for ${YEAR.label}, With Its Source | TaxSums`}
+  description={`Every rate, threshold and allowance used by our calculators for the ${YEAR.label} tax year, each one linked to the HMRC, Revenue Scotland or Welsh Revenue Authority page it came from.`}
+  crumbs={[{ label: 'Rates and sources' }]}
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>Every rate we use, and where it came from</h1>
+      <p class="tool-standfirst">
+        This is the single source of truth behind every calculator on the site. Each figure below is
+        held in one versioned data file, checked against the official source listed, and dated. If a
+        number here is wrong, every calculator is wrong — which is why it gets this much attention.
+      </p>
+    </div>
+
+    <div class="tool-body">
+      <div class="prose">
+        <h2>Sources</h2>
+        <p>All figures verified on 7 August 2026, after the Autumn Budget of 26 November 2025.</p>
+        <div class="table-scroll">
+          <table>
+            <caption>Primary sources</caption>
+            <thead>
+              <tr>
+                <th scope="col">Topic</th>
+                <th scope="col">Source</th>
+                <th scope="col">Verified</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                sources.map(([key, source]) => (
+                  <tr>
+                    <td style="white-space:normal;text-align:left">{key}</td>
+                    <td style="white-space:normal;text-align:left">
+                      <a href={source.url} rel="nofollow noopener" target="_blank">
+                        {source.title}
+                      </a>
+                    </td>
+                    <td>
+                      {new Date(source.verifiedOn).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Income tax</h2>
+        <div class="table-scroll">
+          <table>
+            <tbody>
+              <tr><td>Personal allowance</td><td>{gbp(YEAR.incomeTax.personalAllowance)}</td></tr>
+              <tr><td>Taper threshold</td><td>{gbp(YEAR.incomeTax.taperThreshold)}, £1 lost per £2</td></tr>
+              <tr><td>Allowance fully withdrawn at</td><td>{gbp(125_140)}</td></tr>
+              <tr><td>Dividend allowance</td><td>{gbp(YEAR.incomeTax.dividend.allowance)}</td></tr>
+              <tr><td>Dividend ordinary rate</td><td>{pct(YEAR.incomeTax.dividend.ordinaryRate)}</td></tr>
+              <tr><td>Dividend upper rate</td><td>{pct(YEAR.incomeTax.dividend.upperRate)}</td></tr>
+              <tr><td>Dividend additional rate</td><td>{pct(YEAR.incomeTax.dividend.additionalRate)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <caption>Bands on taxable income — England, Wales, Northern Ireland</caption>
+            <tbody>
+              {
+                YEAR.incomeTax.bands['england-nireland'].map((band, i, bands) => (
+                  <tr>
+                    <td>{band.label}</td>
+                    <td>
+                      {gbp(i === 0 ? 0 : (bands[i - 1]!.upTo ?? 0))}
+                      {band.upTo === null ? '+' : ` – ${gbp(band.upTo)}`} at {pct(band.rate)}
+                    </td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <caption>Bands on taxable income — Scotland</caption>
+            <tbody>
+              {
+                YEAR.incomeTax.bands.scotland.map((band, i, bands) => (
+                  <tr>
+                    <td>{band.label}</td>
+                    <td>
+                      {gbp(i === 0 ? 0 : (bands[i - 1]!.upTo ?? 0))}
+                      {band.upTo === null ? '+' : ` – ${gbp(band.upTo)}`} at {pct(band.rate)}
+                    </td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <h2>National Insurance</h2>
+        <div class="table-scroll">
+          <table>
+            <tbody>
+              <tr><td>Lower Earnings Limit</td><td>{gbp(YEAR.nationalInsurance.lowerEarningsLimit)}</td></tr>
+              <tr><td>Primary Threshold</td><td>{gbp(YEAR.nationalInsurance.employee.primaryThreshold)}</td></tr>
+              <tr><td>Upper Earnings Limit</td><td>{gbp(YEAR.nationalInsurance.employee.upperEarningsLimit)}</td></tr>
+              <tr><td>Employee main / upper rate</td><td>{pct(YEAR.nationalInsurance.employee.mainRate)} / {pct(YEAR.nationalInsurance.employee.upperRate)}</td></tr>
+              <tr><td>Secondary Threshold</td><td>{gbp(YEAR.nationalInsurance.employer.secondaryThreshold)}</td></tr>
+              <tr><td>Employer rate</td><td>{pct(YEAR.nationalInsurance.employer.rate)}</td></tr>
+              <tr><td>Employment Allowance</td><td>{gbp(YEAR.nationalInsurance.employer.employmentAllowance)}</td></tr>
+              <tr><td>Class 1A on benefits</td><td>{pct(YEAR.nationalInsurance.employer.class1aRate)}</td></tr>
+              <tr><td>Class 4 main / upper rate</td><td>{pct(YEAR.nationalInsurance.selfEmployed.class4MainRate)} / {pct(YEAR.nationalInsurance.selfEmployed.class4UpperRate)}</td></tr>
+              <tr><td>Small profits threshold</td><td>{gbp(YEAR.nationalInsurance.selfEmployed.smallProfitsThreshold)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Student loans</h2>
+        <div class="table-scroll">
+          <table>
+            <tbody>
+              {
+                Object.values(YEAR.studentLoans).map((plan) => (
+                  <tr>
+                    <td>{plan.label}</td>
+                    <td>{gbp(plan.threshold)} at {pct(plan.rate)}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Property taxes</h2>
+        {
+          (['england-nireland', 'scotland', 'wales'] as const).map((region) => {
+            const rules = YEAR.propertyTax[region];
+            return (
+              <div class="table-scroll">
+                <table>
+                  <caption>
+                    {rules.name} ({rules.abbreviation}) — {rules.authority}
+                  </caption>
+                  <tbody>
+                    {rules.standardBands.map((band, i, bands) => (
+                      <tr>
+                        <td>
+                          {gbp(i === 0 ? 0 : (bands[i - 1]!.upTo ?? 0))}
+                          {band.upTo === null ? '+' : ` – ${gbp(band.upTo)}`}
+                        </td>
+                        <td>{pct(band.rate)}</td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td>Additional property</td>
+                      <td>
+                        {rules.additionalProperty.kind === 'surcharge'
+                          ? `+${pct(rules.additionalProperty.rate)} on every band`
+                          : rules.additionalProperty.kind === 'flat'
+                            ? `${pct(rules.additionalProperty.rate)} flat on the whole price`
+                            : 'Separate band table'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>First-time buyer relief</td>
+                      <td>
+                        {rules.firstTimeBuyerRelief
+                          ? `Nil rate to ${gbp(rules.firstTimeBuyerRelief.nilRateBand)}${
+                              rules.firstTimeBuyerRelief.maximumPrice
+                                ? `, lost above ${gbp(rules.firstTimeBuyerRelief.maximumPrice)}`
+                                : ', no price limit'
+                            }`
+                          : 'None'}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            );
+          })
+        }
+
+        <h2>Business and other taxes</h2>
+        <div class="table-scroll">
+          <table>
+            <tbody>
+              <tr><td>Corporation tax, small profits</td><td>{pct(YEAR.corporationTax.smallProfitsRate)} to {gbp(YEAR.corporationTax.lowerLimit)}</td></tr>
+              <tr><td>Corporation tax, main rate</td><td>{pct(YEAR.corporationTax.mainRate)} above {gbp(YEAR.corporationTax.upperLimit)}</td></tr>
+              <tr><td>Marginal relief fraction</td><td>3/200 (26.5% effective marginal)</td></tr>
+              <tr><td>CGT annual exempt amount</td><td>{gbp(YEAR.capitalGains.annualExemptAmount)}</td></tr>
+              <tr><td>CGT residential rates</td><td>{pct(YEAR.capitalGains.residentialBasicRate)} / {pct(YEAR.capitalGains.residentialHigherRate)}</td></tr>
+              <tr><td>VAT registration threshold</td><td>{gbp(YEAR.vat.registrationThreshold)}</td></tr>
+              <tr><td>Flat rate scheme join / leave</td><td>{gbp(YEAR.vat.flatRateJoinThreshold)} / {gbp(YEAR.vat.flatRateLeaveThreshold)}</td></tr>
+              <tr><td>Limited cost trader rate</td><td>{pct(YEAR.vat.limitedCostTraderRate)}</td></tr>
+              <tr><td>Pension annual allowance</td><td>{gbp(YEAR.pensions.annualAllowance)}</td></tr>
+              <tr><td>Redundancy weekly cap (GB / NI)</td><td>{gbp(YEAR.redundancy.weeklyPayCap)} / {gbp(YEAR.redundancy.weeklyPayCapNorthernIreland)}</td></tr>
+              <tr><td>Termination payment exemption</td><td>{gbp(YEAR.redundancy.terminationPaymentExemption)}</td></tr>
+              <tr><td>Electric company car BIK</td><td>{pct(YEAR.companyCars.zeroEmissionPercentage)}</td></tr>
+              <tr><td>Car fuel benefit multiplier</td><td>{gbp(YEAR.companyCars.fuelBenefitMultiplier)}</td></tr>
+              <tr><td>Approved mileage, first 10,000</td><td>{(YEAR.mileage.carFirst10000 * 100).toFixed(0)}p per mile</td></tr>
+              <tr><td>Child Benefit, eldest</td><td>£{YEAR.childBenefit.eldestWeekly.toFixed(2)} a week</td></tr>
+              <tr><td>HICBC threshold</td><td>{gbp(YEAR.childBenefit.hicbcThreshold)} to {gbp(YEAR.childBenefit.hicbcUpperThreshold)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          <a href="/changelog/">See what changed and when</a> &middot;{' '}
+          <a href="/methodology/">How we calculate</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

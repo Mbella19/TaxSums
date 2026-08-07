@@ -1,0 +1,37 @@
+---
+import { CURRENT_TAX_YEAR } from '../data/tax-years';
+
+interface Props {
+  /** Key into the tax year's `sources` map. */
+  sourceKey: string;
+}
+
+const { sourceKey } = Astro.props;
+const source = CURRENT_TAX_YEAR.sources[sourceKey];
+
+if (!source) {
+  throw new Error(
+    `No source registered for "${sourceKey}". Add it to the tax year's sources map so the page can cite its figures.`,
+  );
+}
+
+const verified = new Date(source.verifiedOn).toLocaleDateString('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+---
+
+{
+  /*
+   * Shown on every tool and guide. Money content is held to a higher standard
+   * by Google and by readers, and "here is the figure, here is where it came
+   * from, here is when we last checked" is the cheapest way to earn both.
+   */
+}
+<p class="verified">
+  <span>
+    Rates for <strong>{CURRENT_TAX_YEAR.label}</strong>, verified {verified} against
+    <a href={source.url} rel="nofollow noopener" target="_blank">{source.title}</a>
+  </span>
+</p>

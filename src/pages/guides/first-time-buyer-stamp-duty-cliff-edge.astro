@@ -1,0 +1,133 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+import { guideBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+import { calculatePropertyTax, firstTimeBuyerCliff } from '../../lib/property-tax';
+
+const guide = guideBySlug('first-time-buyer-stamp-duty-cliff-edge');
+const cliff = firstTimeBuyerCliff('england-nireland', YEAR)!;
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+
+const sdlt = (price: number, ftb: boolean) =>
+  calculatePropertyTax({ price, region: 'england-nireland', firstTimeBuyer: ftb }, YEAR).total;
+
+const rows = [480_000, 495_000, 500_000, 500_001, 510_000, 525_000].map((price) => ({
+  price,
+  ftb: sdlt(price, true),
+  standard: sdlt(price, false),
+}));
+---
+
+<GuideLayout guide={guide} sourceKey="sdlt">
+  <p class="tool-standfirst">
+    In England and Northern Ireland, first-time buyer stamp duty relief does not taper away. It
+    vanishes. One pound over {gbp(cliff.limit)} costs {gbp(cliff.jump)}.
+  </p>
+
+  <h2>The cliff</h2>
+  <p>
+    First-time buyers pay nothing up to {gbp(300_000)} and 5% between there and {gbp(cliff.limit)}.
+    Above {gbp(cliff.limit)} the relief is withdrawn <strong>entirely</strong> and the standard rates
+    apply to the whole purchase price — not just the excess.
+  </p>
+  <div class="table-scroll">
+    <table>
+      <caption>What a first-time buyer pays either side of the limit</caption>
+      <thead>
+        <tr>
+          <th scope="col">Price</th>
+          <th scope="col">First-time buyer</th>
+          <th scope="col">Standard rate</th>
+          <th scope="col">Relief worth</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{gbp(row.price)}</td>
+              <td>{gbp(row.ftb)}</td>
+              <td>{gbp(row.standard)}</td>
+              <td>{row.ftb === row.standard ? 'Nothing' : gbp(row.standard - row.ftb)}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <p>
+    At exactly {gbp(cliff.limit)} you pay {gbp(cliff.taxAtLimit)}. At {gbp(cliff.limit + 1)} you pay{' '}
+    {gbp(cliff.taxJustAbove)}. The extra pound on the price costs{' '}
+    <strong>{gbp(cliff.jump)}</strong> in tax.
+  </p>
+
+  <h2>The dead zone</h2>
+  <p>
+    There is a band above {gbp(cliff.limit)} where paying more for a house leaves you worse off in
+    total. Buying at {gbp(cliff.limit)} costs {gbp(cliff.limit + cliff.taxAtLimit)} all in. You have
+    to reach roughly {gbp(505_000)} before the total outlay at the higher price exceeds that — so
+    every offer between {gbp(cliff.limit + 1)} and about {gbp(505_000)} is worse than simply
+    offering the limit.
+  </p>
+  <p>
+    If you are negotiating in that range, {gbp(cliff.limit)} is a genuinely rational maximum, and it
+    is worth saying so explicitly to the agent. Sellers do not always realise the buyer's cost curve
+    has a step in it.
+  </p>
+
+  <h2>Ways to stay under</h2>
+  <ul>
+    <li>
+      <strong>Buy fixtures and fittings separately.</strong> Carpets, curtains, white goods and
+      furniture can legitimately be bought outside the property price. The amounts must be genuine
+      and reasonable — HMRC challenges inflated apportionments, and your solicitor will advise on
+      what is defensible.
+    </li>
+    <li>
+      <strong>Negotiate to the limit.</strong> A seller may prefer a certain {gbp(cliff.limit)} to a
+      buyer who cannot complete at {gbp(510_000)}.
+    </li>
+    <li>
+      <strong>Reconsider whether relief is worth chasing.</strong> Above roughly {gbp(525_000)} the
+      relief was only ever worth {gbp(cliff.jump)}, which may matter less than the right house.
+    </li>
+  </ul>
+
+  <h2>Who counts as a first-time buyer</h2>
+  <p>
+    You must never have owned a dwelling <strong>anywhere in the world</strong>. That includes:
+  </p>
+  <ul>
+    <li>An inherited property or share of one, even if you never lived there.</li>
+    <li>A property owned abroad.</li>
+    <li>A property you were named on in a divorce settlement.</li>
+    <li>A property held through a trust where you were a beneficiary.</li>
+  </ul>
+  <p>
+    And every buyer must qualify. If you buy with a partner who has owned before, the relief is lost
+    for the whole transaction — and if they still own that property, the 5% additional property
+    surcharge may apply on top.
+  </p>
+
+  <h2>Scotland and Wales do it differently</h2>
+  <p>
+    <strong>Scotland</strong> has first-time buyer relief with <em>no upper price limit</em>. It
+    raises the nil-rate band from {gbp(145_000)} to {gbp(175_000)}, saving a maximum of {gbp(600)},
+    but there is no cliff to fall off at any price.{' '}
+    <a href="/stamp-duty-calculator/scotland/">LBTT calculator</a>.
+  </p>
+  <p>
+    <strong>Wales</strong> has no first-time buyer relief at all — but its {gbp(225_000)} nil-rate
+    band is the highest in the UK, so most Welsh first-time buyers pay nothing regardless.{' '}
+    <a href="/stamp-duty-calculator/wales/">LTT calculator</a>.
+  </p>
+
+  <div class="note">
+    <strong>Check the current rules before you offer</strong>
+    <p>
+      First-time buyer thresholds have changed several times in recent years and are a recurring
+      Budget target. The figures here are for {YEAR.label} and were verified against HMRC on 7
+      August 2026 — but if you are reading this months later, confirm before making an offer.
+    </p>
+  </div>
+</GuideLayout>

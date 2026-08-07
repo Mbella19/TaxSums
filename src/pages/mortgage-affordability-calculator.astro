@@ -1,0 +1,178 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Faq from '../components/Faq.astro';
+import MortgageAffordabilityCalculator from '../components/calculators/MortgageAffordabilityCalculator';
+import { toolBySlug } from '../data/site';
+
+const tool = toolBySlug('mortgage-affordability-calculator');
+const gbp = (n: number) => `£${n.toLocaleString('en-GB')}`;
+---
+
+<ToolLayout tool={tool}>
+  <MortgageAffordabilityCalculator slot="calculator" client:load />
+
+  <Fragment slot="explanation">
+    <h2>Why this shows a range and not one number</h2>
+    <p>
+      Every other affordability calculator gives you a single confident figure. That figure is
+      made up, and here is why.
+    </p>
+    <p>
+      The FCA's mandatory interest rate stress test was withdrawn on 1 August 2022. Since then
+      lenders have set their own affordability rules within the FCA's broader MCOB framework. In
+      July 2025 the Financial Policy Committee recommended allowing individual lenders to increase
+      their share of lending at loan-to-income ratios of 4.5 and above, and several mainstream
+      lenders now offer 5.5 times income as standard, with higher multiples for particular borrower
+      profiles.
+    </p>
+    <p>
+      So there is no single correct answer. What you can actually borrow depends on which lender
+      you approach, your credit file, how they treat your particular income, and their own stress
+      rate. A range with the reasoning shown is more honest and more useful than a precise-looking
+      number that no lender is bound by.
+    </p>
+
+    <h3>What lenders actually assess</h3>
+    <ul>
+      <li>
+        <strong>Loan to income.</strong> The headline cap. 4.5 times is the long-standing default;
+        4 times is cautious; 5.5 times is available from several high street lenders.
+      </li>
+      <li>
+        <strong>Affordability modelling.</strong> Your income against committed outgoings, credit
+        commitments, childcare and dependants. This often bites before the LTI cap does.
+      </li>
+      <li>
+        <strong>The stress test.</strong> Can you still pay if rates rise by a few points? Lenders
+        set their own margin now, typically 1 to 3 points above the product rate or a floor rate.
+      </li>
+      <li>
+        <strong>Loan to value.</strong> Your deposit determines which rates you can access at all.
+        The jumps at 90%, 85%, 80% and 75% are significant.
+      </li>
+    </ul>
+
+    <h3>What counts as income</h3>
+    <p>
+      Basic salary always counts in full. Beyond that lenders differ sharply: overtime, bonus and
+      commission are often counted at 50% to 100% and usually need a two-year history. Self-employed
+      applicants normally need two to three years of accounts or SA302s, with lenders using either
+      an average or the most recent year. Some lenders count child benefit and tax credits; others
+      do not.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>Costs beyond the deposit</h2>
+    <p>
+      Affordability is not only the monthly payment. Budget for the upfront costs too:
+    </p>
+    <div class="table-scroll">
+      <table>
+        <caption>Typical additional costs when buying</caption>
+        <thead>
+          <tr>
+            <th scope="col">Cost</th>
+            <th scope="col">Typical amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Stamp duty / LBTT / LTT</td>
+            <td style="white-space:normal;text-align:right">
+              <a href="/stamp-duty-calculator/">Work yours out</a>
+            </td>
+          </tr>
+          <tr><td>Conveyancing</td><td>{gbp(1200)} – {gbp(2500)}</td></tr>
+          <tr><td>Survey</td><td>{gbp(400)} – {gbp(1500)}</td></tr>
+          <tr><td>Mortgage product fee</td><td>{gbp(0)} – {gbp(1500)}</td></tr>
+          <tr><td>Removals</td><td>{gbp(400)} – {gbp(1500)}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Why loan to value matters</caption>
+        <thead>
+          <tr>
+            <th scope="col">Deposit</th>
+            <th scope="col">LTV</th>
+            <th scope="col">Effect on rates</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>5%</td><td>95%</td><td style="white-space:normal;text-align:right">Fewest deals, highest rates</td></tr>
+          <tr><td>10%</td><td>90%</td><td style="white-space:normal;text-align:right">Noticeably better choice</td></tr>
+          <tr><td>15%</td><td>85%</td><td style="white-space:normal;text-align:right">Materially cheaper</td></tr>
+          <tr><td>25%</td><td>75%</td><td style="white-space:normal;text-align:right">Near the best available</td></tr>
+          <tr><td>40%</td><td>60%</td><td style="white-space:normal;text-align:right">Best rates on the market</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>Honest limits</h2>
+    <ul>
+      <li>
+        <strong>This is not a decision in principle.</strong> Only a lender can tell you what they
+        will actually lend, and only after assessing your credit file and documents.
+      </li>
+      <li>
+        <strong>Credit commitments are handled roughly.</strong> Lenders model these in detail; the
+        calculator applies a simple reduction. A car finance agreement with two years left is
+        treated very differently from one ending next month.
+      </li>
+      <li>
+        <strong>Non-salary income is not modelled.</strong> Bonus, commission, overtime,
+        self-employed profit and rental income are all treated differently by every lender.
+      </li>
+      <li>
+        <strong>No allowance for dependants.</strong> Children and other dependants reduce
+        affordability, sometimes substantially.
+      </li>
+      <li>
+        <strong>Take-home pay assumes England/Northern Ireland rates</strong>, no pension
+        contribution and no student loan. If you have those, your actual disposable income is lower
+        — check the <a href="/take-home-pay-calculator/">take-home pay calculator</a>.
+      </li>
+    </ul>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'How much can I borrow on a £40,000 salary?',
+        answer:
+          'Typically £160,000 to £220,000, depending on the lender. The high street default of 4.5 times income gives £180,000, cautious lenders work to 4 times, and several mainstream lenders now go to 5.5 times for borrowers who fit their criteria. Your commitments and credit file move it within that range.',
+      },
+      {
+        question: 'Is the 4.5 times income rule still a thing?',
+        answer:
+          'It is a convention, not a rule for individual borrowers. The Bank of England limits the proportion of a lender\'s new lending that can be above 4.5 times income, but that is a cap on the lender\'s book, not on you. Individual borrowers can and do get more.',
+      },
+      {
+        question: 'Do lenders still stress test my mortgage?',
+        answer:
+          'Yes, but the mandatory FCA test was withdrawn in August 2022 and lenders now set their own approach. Most check you could still afford payments at a few percentage points above your product rate, or at a floor rate. The stress table above shows what a one point rise would cost you.',
+      },
+      {
+        question: 'Does a student loan reduce how much I can borrow?',
+        answer:
+          'Yes. Repayments come out of your income before a lender assesses affordability, so a Plan 2 borrower on £40,000 has around £950 a year less disposable income than someone without a loan. It rarely stops an application but it does reduce the maximum.',
+      },
+      {
+        question: 'Can I borrow more with a longer term?',
+        answer:
+          'Usually yes, because the monthly payment falls and affordability improves. It costs considerably more in total interest, and lenders will not normally take the term past your expected retirement age. A 35-year term instead of 25 might raise your maximum by 10-15%.',
+      },
+      {
+        question: 'How much deposit do I actually need?',
+        answer:
+          'The minimum is usually 5%, but 10% opens up a noticeably better range of deals and 15% is materially cheaper again. Remember the deposit is not the only upfront cost — stamp duty, legal fees and a survey typically add several thousand pounds.',
+      },
+    ]}
+  />
+</ToolLayout>

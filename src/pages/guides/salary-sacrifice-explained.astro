@@ -1,0 +1,165 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+import { guideBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+import { calculateTakeHome } from '../../lib/take-home';
+
+const guide = guideBySlug('salary-sacrifice-explained');
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+
+const compare = (method: 'salary-sacrifice' | 'net-pay' | 'relief-at-source', salary = 50_000) =>
+  calculateTakeHome(
+    {
+      grossSalary: salary,
+      region: 'england-nireland',
+      pension: { method, kind: 'amount', value: 5_000 },
+      studentLoanPlans: [],
+    },
+    YEAR,
+  );
+
+const sacrifice = compare('salary-sacrifice');
+const netPay = compare('net-pay');
+const reliefAtSource = compare('relief-at-source');
+---
+
+<GuideLayout guide={guide} sourceKey="payeAndNi">
+  <p class="tool-standfirst">
+    Salary sacrifice is the only pension arrangement that saves National Insurance as well as income
+    tax. That is worth real money now — and it is being capped from April 2029.
+  </p>
+
+  <h2>How it works</h2>
+  <p>
+    You agree with your employer to give up part of your contractual salary in exchange for a
+    pension contribution. The key word is <em>contractual</em>: the money is never paid to you as
+    earnings, so it is not there to be taxed. Both income tax and National Insurance are calculated
+    on the reduced figure.
+  </p>
+  <p>
+    Your employer also saves their 15% National Insurance on the sacrificed amount. Many pass some
+    or all of that saving into your pension too, which makes a well-run scheme better than it first
+    appears. It is always worth asking whether yours does.
+  </p>
+
+  <h2>The three arrangements compared</h2>
+  <p>
+    On a {gbp(50_000)} salary with a {gbp(5_000)} contribution, {YEAR.label} rates:
+  </p>
+  <div class="table-scroll">
+    <table>
+      <caption>Same contribution, three different outcomes</caption>
+      <thead>
+        <tr>
+          <th scope="col">Arrangement</th>
+          <th scope="col">Income tax</th>
+          <th scope="col">National Insurance</th>
+          <th scope="col">Cost to you</th>
+          <th scope="col">Take-home pay</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Salary sacrifice</td>
+          <td>{gbp(sacrifice.incomeTax.total)}</td>
+          <td>{gbp(sacrifice.nationalInsurance.total)}</td>
+          <td>{gbp(sacrifice.pension.costToEmployee)}</td>
+          <td>{gbp(sacrifice.takeHomeAnnual)}</td>
+        </tr>
+        <tr>
+          <td>Net pay</td>
+          <td>{gbp(netPay.incomeTax.total)}</td>
+          <td>{gbp(netPay.nationalInsurance.total)}</td>
+          <td>{gbp(netPay.pension.costToEmployee)}</td>
+          <td>{gbp(netPay.takeHomeAnnual)}</td>
+        </tr>
+        <tr>
+          <td>Relief at source</td>
+          <td>{gbp(reliefAtSource.incomeTax.total)}</td>
+          <td>{gbp(reliefAtSource.nationalInsurance.total)}</td>
+          <td>{gbp(reliefAtSource.pension.costToEmployee)}</td>
+          <td>{gbp(reliefAtSource.takeHomeAnnual)}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Net pay and relief at source produce identical take-home pay for a basic rate taxpayer — the
+    difference is only in <em>when</em> the relief arrives. Salary sacrifice leaves you{' '}
+    <strong>{gbp(sacrifice.takeHomeAnnual - netPay.takeHomeAnnual)}</strong> better off, which is
+    exactly 8% of {gbp(5_000)}: the employee National Insurance you did not pay.
+  </p>
+  <p>
+    Above the upper earnings limit of {gbp(YEAR.nationalInsurance.employee.upperEarningsLimit)} the
+    National Insurance rate drops to 2%, so the sacrifice advantage shrinks to 2% of the contribution
+    for higher earners. It is most valuable to people earning between{' '}
+    {gbp(YEAR.nationalInsurance.employee.primaryThreshold)} and{' '}
+    {gbp(YEAR.nationalInsurance.employee.upperEarningsLimit)}.
+  </p>
+
+  <h2>The other advantages</h2>
+  <ul>
+    <li>
+      <strong>It reduces student loan repayments.</strong> Sacrifice lowers the earnings figure used
+      for student loan deductions; the other two arrangements do not. On a Plan 2 loan that is a
+      further 9% of the sacrificed amount.
+    </li>
+    <li>
+      <strong>It escapes the £100,000 trap efficiently.</strong> Sacrificing enough to bring adjusted
+      net income to {gbp(100_000)} restores the personal allowance — and the childcare support that
+      is lost above it. <a href="/guides/the-100k-tax-trap/">More on the trap</a>.
+    </li>
+    <li>
+      <strong>Higher rate relief is automatic.</strong> Unlike relief at source, there is nothing to
+      claim from HMRC.
+    </li>
+  </ul>
+
+  <h2>The catches</h2>
+  <ul>
+    <li>
+      <strong>You cannot sacrifice below the National Minimum Wage.</strong> This is a hard legal
+      floor and it limits how much lower earners can put in.
+    </li>
+    <li>
+      <strong>Your official salary is lower.</strong> That can affect mortgage applications, though
+      most lenders will work from the pre-sacrifice figure if you ask and provide a letter.
+    </li>
+    <li>
+      <strong>Salary-linked benefits fall.</strong> Statutory maternity pay, death-in-service cover,
+      and redundancy pay are often based on the reduced salary. Good schemes protect these
+      ("notional salary"); check yours.
+    </li>
+    <li>
+      <strong>It is a contract change.</strong> You cannot switch it on and off freely — usually only
+      at set points or on a life event.
+    </li>
+  </ul>
+
+  <h2>The £2,000 cap from April 2029</h2>
+  <p>
+    The Autumn Budget of 26 November 2025 announced that National Insurance relief on
+    salary-sacrificed pension contributions will be capped at <strong>£2,000 a year</strong> from
+    April 2029. Above that, the sacrificed amount will still escape income tax but will attract
+    employee and employer National Insurance at the normal rates.
+  </p>
+  <p>
+    It does not affect {YEAR.label}, so nothing changes yet. But if you sacrifice more than £2,000 a
+    year — which is most people contributing 5% or more of a middling salary — the arrangement will
+    become less valuable, and the gap between sacrifice and net pay will narrow to almost nothing
+    for the excess.
+  </p>
+  <p>
+    Three years is enough notice to plan. The sensible reading is that the income tax relief, which
+    is by far the larger part, is untouched — so the case for contributing at all is unchanged.
+  </p>
+
+  <h2>Which one am I on?</h2>
+  <p>
+    Look at your payslip. Under salary sacrifice your gross pay is already reduced and there is no
+    separate pension line, or a line showing an employer contribution only. Under net pay you will
+    see your full gross with a pension deduction before tax. Under relief at source the deduction
+    comes after tax and is 80% of the headline percentage. If it is not obvious, payroll will tell
+    you — and it is worth knowing, because it changes what your contribution actually costs you.
+  </p>
+</GuideLayout>

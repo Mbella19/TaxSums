@@ -1,0 +1,113 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE, ADS_ENABLED } from '../config';
+---
+
+<BaseLayout
+  title={`Privacy Policy | ${SITE.name}`}
+  description="What data we collect, what we do not, and how our calculators work entirely in your browser without sending anything to us."
+  crumbs={[{ label: 'Privacy' }]}
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>Privacy policy</h1>
+      <p class="tool-standfirst">Last updated 7 August 2026.</p>
+    </div>
+
+    <div class="tool-body">
+      <div class="prose">
+        <h2>The short version</h2>
+        <p>
+          Every calculation on this site runs inside your browser. Your salary, property price,
+          redundancy package and everything else you type is never sent to us, never stored, and
+          never seen by any server. There is no account to create and no email address to give.
+        </p>
+
+        <h2>What we do not collect</h2>
+        <ul>
+          <li>Anything you enter into a calculator.</li>
+          <li>Your name, email address, or contact details, unless you email us directly.</li>
+          <li>Your financial information in any form.</li>
+        </ul>
+        <p>
+          Calculator inputs are held only in your browser's memory and in the page URL, so you can
+          bookmark or share a result. Closing the tab discards them.
+        </p>
+
+        <h2>What is collected automatically</h2>
+        <p>
+          Our hosting provider records standard server logs when a page is requested: IP address,
+          browser type, the page requested, and the time. These are used to keep the site running and
+          secure. We do not use them to identify individuals.
+        </p>
+
+        <h2>Cookies</h2>
+        {
+          ADS_ENABLED ? (
+            <>
+              <p>
+                We show advertising through Google AdSense, which uses cookies to serve and measure
+                ads. You are asked for consent before any advertising cookie is set, and you can
+                change or withdraw that consent at any time.
+              </p>
+              <p>
+                Google may use cookies to serve ads based on your prior visits to this or other
+                sites. You can opt out of personalised advertising in your{' '}
+                <a href="https://myadcenter.google.com/" rel="nofollow noopener" target="_blank">
+                  Google Ad Settings
+                </a>
+                , or opt out of third-party vendor cookies at{' '}
+                <a href="https://optout.aboutads.info/" rel="nofollow noopener" target="_blank">
+                  aboutads.info
+                </a>
+                .
+              </p>
+            </>
+          ) : (
+            <p>
+              This site currently sets no cookies at all. We use no analytics, no tracking pixels and
+              no advertising scripts. If that changes we will ask for your consent first and update
+              this page.
+            </p>
+          )
+        }
+
+        <h2>Third parties</h2>
+        <p>
+          The site loads no external fonts, scripts or images. Links to gov.uk, Revenue Scotland and
+          other sources are ordinary links — following one takes you to a site with its own privacy
+          policy.
+        </p>
+
+        <h2>Your rights</h2>
+        <p>
+          Under UK GDPR you have rights to access, correct and erase personal data held about you.
+          Because we do not collect or store personal data through the calculators, in practice there
+          is normally nothing for us to hold. If you have emailed us, you can ask us to delete that
+          correspondence at any time.
+        </p>
+        <p>
+          You can complain to the Information Commissioner's Office at{' '}
+          <a href="https://ico.org.uk/" rel="nofollow noopener" target="_blank">ico.org.uk</a>.
+        </p>
+
+        <h2>Children</h2>
+        <p>
+          This site is intended for adults dealing with their own tax affairs. We do not knowingly
+          collect data from children.
+        </p>
+
+        <h2>Changes</h2>
+        <p>
+          If this policy changes we will update the date at the top. Material changes — particularly
+          anything involving cookies or advertising — will be flagged on the site.
+        </p>
+
+        <h2>Contact</h2>
+        <p>
+          Questions about privacy: <a href="/contact/">get in touch</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

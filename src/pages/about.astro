@@ -1,0 +1,107 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../config';
+import { TOOLS } from '../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+---
+
+<BaseLayout
+  title={`About ${SITE.name}`}
+  description={`Who runs ${SITE.name}, why it exists, how it is funded, and the standards every calculator on the site is held to.`}
+  crumbs={[{ label: 'About' }]}
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>About {SITE.name}</h1>
+      <p class="tool-standfirst">
+        {TOOLS.length} UK tax calculators, built to be correct and kept correct through every Budget.
+      </p>
+    </div>
+
+    <div class="tool-body">
+      <div class="prose">
+        <h2>Why this site exists</h2>
+        <p>
+          Most UK tax calculators give you a number and nothing else. You cannot see which bands were
+          used, where the rates came from, when they were last checked, or what the tool cannot
+          handle. When the number disagrees with your payslip, you have no way to find out which is
+          wrong.
+        </p>
+        <p>
+          Worse, a lot of them are quietly inaccurate. Common errors we found while researching this
+          site: treating all three pension arrangements as identical, applying a single Capital Gains
+          Tax rate to a gain that straddles two, claiming the Employment Allowance for one-person
+          companies that cannot have it, and using the wrong boundary for the additional rate band.
+          Each is invisible unless you already know the answer.
+        </p>
+        <p>We built this to do the opposite:</p>
+        <ul>
+          <li><strong>Show the working.</strong> Every result comes with the band table behind it.</li>
+          <li><strong>Cite the source.</strong> Every rate links to the HMRC or devolved authority page it came from, with the date we last checked it.</li>
+          <li><strong>State the limits.</strong> Where a calculation cannot capture your situation, the page says so.</li>
+        </ul>
+
+        <h2>Who writes this</h2>
+        <p>
+          {SITE.name} is written and maintained by the {SITE.author.name}. We are not accountants and
+          we do not offer advice — we build tools and explain the rules behind them, working from
+          primary sources.
+        </p>
+        <p>
+          What we do have is a disciplined process: every rate held in one versioned, sourced data
+          file; a calculation engine covered by 112 unit tests built from HMRC worked examples; and
+          results cross-checked against established calculators before launch, with any disagreement
+          investigated rather than assumed away. <a href="/methodology/">Read the methodology</a>.
+        </p>
+
+        <h2>How it stays current</h2>
+        <p>
+          The hard part of a tax calculator is not building it — it is keeping it right. Rates change
+          at every Budget, and abandoned calculators do not announce that they are out of date.
+        </p>
+        <p>
+          Our rates live in a single data file per tax year, typed against a schema that will not
+          compile if a figure is missing. Updating for a Budget is a data change, not a hunt through
+          calculator code. We review after each Budget and Spring Statement, and again each April.
+          The <a href="/changelog/">changelog</a> records every change with its date.
+        </p>
+        <p>
+          Current figures are for the <strong>{YEAR.label}</strong> tax year, reflecting the Autumn
+          Budget of 26 November 2025, verified on 7 August 2026.
+        </p>
+
+        <h2>How this is funded</h2>
+        <p>
+          By advertising. The calculators are free, there is no account to create, no email to hand
+          over, and nothing is behind a paywall. We do not sell data — we do not collect any.
+        </p>
+        <p>
+          Ads are kept away from the inputs and results so they cannot be tapped by mistake or
+          confused with the calculation. If that ever stops being true, we have got the balance
+          wrong and would rather hear about it.
+        </p>
+
+        <h2>Your privacy</h2>
+        <p>
+          Every calculation runs in your browser. Salary, property price, redundancy package —
+          none of it is sent to us or stored anywhere. There is no account, and no server ever sees
+          what you type. <a href="/privacy/">Full privacy policy</a>.
+        </p>
+
+        <h2>Corrections and suggestions</h2>
+        <p>
+          If a figure looks wrong, please tell us — send the inputs you used and what you expected.
+          Corrections are the most valuable thing anyone sends us and they are fixed the same day.
+          Suggestions for calculators we should build next are welcome too.
+        </p>
+        <p><a href="/contact/">Get in touch</a></p>
+
+        <p class="note">
+          {SITE.name} provides information, not financial or tax advice. Our calculators are
+          estimates to help you understand your position and ask better questions. Check anything
+          important with a qualified accountant or with HMRC before acting on it.
+        </p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

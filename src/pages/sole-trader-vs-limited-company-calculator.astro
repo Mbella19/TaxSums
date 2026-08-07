@@ -1,0 +1,256 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Faq from '../components/Faq.astro';
+import IncorporationCalculator from '../components/calculators/IncorporationCalculator';
+import { toolBySlug } from '../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+import { compareTradingStructures, marginalExtractionRates } from '../lib/incorporation';
+
+const tool = toolBySlug('sole-trader-vs-limited-company-calculator');
+const rates = marginalExtractionRates(YEAR);
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
+
+const comparison = [30000, 50000, 60000, 80000, 100000, 150000].map((profit) => {
+  const full = compareTradingStructures(profit, YEAR, { extraCosts: 0 });
+  return {
+    profit,
+    soleTrader: full.soleTrader.takeHome,
+    company: full.limitedCompany.takeHome,
+    difference: full.advantage,
+  };
+});
+---
+
+<ToolLayout tool={tool}>
+  <IncorporationCalculator slot="calculator" client:load />
+
+  <Fragment slot="explanation">
+    <h2>The answer changed in April 2026</h2>
+    <p>
+      For years the standard advice was simple: past about £30,000 of profit, incorporate. Three
+      changes have undermined that, and the last one landed this tax year.
+    </p>
+    <ul>
+      <li>
+        <strong>Employer National Insurance rose to 15%</strong> and its threshold fell to{' '}
+        {gbp(YEAR.nationalInsurance.employer.secondaryThreshold)}. A director on a{' '}
+        {gbp(YEAR.incomeTax.personalAllowance)} salary now costs the company{' '}
+        {gbp((YEAR.incomeTax.personalAllowance - 5000) * 0.15)} in employer NI alone.
+      </li>
+      <li>
+        <strong>Corporation tax is 26.5% at the margin</strong> between{' '}
+        {gbp(YEAR.corporationTax.lowerLimit)} and {gbp(YEAR.corporationTax.upperLimit)} of profit —
+        higher than the 25% headline, because marginal relief is clawed back.
+      </li>
+      <li>
+        <strong>Dividend rates rose 2 points on 6 April 2026</strong>, to{' '}
+        {pct(YEAR.incomeTax.dividend.ordinaryRate)} and{' '}
+        {pct(YEAR.incomeTax.dividend.upperRate)}.
+      </li>
+    </ul>
+
+    <h3>Why full extraction is now the expensive route</h3>
+    <p>
+      Stack those together and taking the next pound of profit out of a company in the marginal
+      corporation tax band costs {pct(rates.marginalCorporationTax)} in corporation tax, then{' '}
+      {pct(YEAR.incomeTax.dividend.upperRate)} on what is left — <strong>{pct(rates.companyCombined)} combined</strong>.
+      A higher rate sole trader pays {pct(YEAR.incomeTax.bands['england-nireland'][1]!.rate)} income
+      tax plus {pct(YEAR.nationalInsurance.selfEmployed.class4UpperRate)} Class 4 National
+      Insurance — {pct(rates.soleTraderHigher)}.
+    </p>
+    <p>
+      So if you need every penny of profit each year, a limited company is now usually the more
+      expensive option. That is the opposite of the conventional wisdom, and it is why the
+      calculator above defaults to showing you both.
+    </p>
+
+    <h3>Where the advantage actually lives</h3>
+    <p>
+      The company wins when you <strong>do not need to draw everything</strong>. Profit left inside
+      the company has borne corporation tax but no dividend tax, and that tax is deferred until you
+      take it out — in a later year, at a lower rate, spread across two tax years, or eventually
+      through a members' voluntary liquidation. A sole trader has no such choice: all profit is
+      taxed in the year it is earned, whether or not it is spent.
+    </p>
+    <p>
+      Set the calculator to "only what I need" to see this. It is also why a company suits a
+      business with lumpy profits, and why the honest answer to "should I incorporate?" depends far
+      more on your spending than on your turnover.
+    </p>
+
+    <h3>The Employment Allowance trap</h3>
+    <p>
+      The Employment Allowance is worth up to{' '}
+      {gbp(YEAR.nationalInsurance.employer.employmentAllowance)} of employer National Insurance.
+      A company whose <strong>only employee is also a director cannot claim it</strong>. Most
+      one-person companies therefore pay employer NI in full, and a great many comparison tools
+      quietly apply the allowance anyway, overstating the case for incorporating by over a thousand
+      pounds.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>Full extraction compared, {YEAR.label}</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>
+          Taking all profit out each year, {gbp(YEAR.incomeTax.personalAllowance)} salary, sole
+          director, before accountancy costs
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Profit</th>
+            <th scope="col">Sole trader keeps</th>
+            <th scope="col">Company keeps</th>
+            <th scope="col">Difference</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            comparison.map((row) => (
+              <tr>
+                <td>{gbp(row.profit)}</td>
+                <td>{gbp(row.soleTrader)}</td>
+                <td>{gbp(row.company)}</td>
+                <td>
+                  {row.difference >= 0 ? '+' : '−'}
+                  {gbp(Math.abs(row.difference))}
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Corporation tax rates for {YEAR.label}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Profit</th>
+            <th scope="col">Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Up to {gbp(YEAR.corporationTax.lowerLimit)}</td>
+            <td>{pct(YEAR.corporationTax.smallProfitsRate)}</td>
+          </tr>
+          <tr>
+            <td>
+              {gbp(YEAR.corporationTax.lowerLimit)} to {gbp(YEAR.corporationTax.upperLimit)}
+            </td>
+            <td>{pct(rates.marginalCorporationTax)} at the margin</td>
+          </tr>
+          <tr>
+            <td>Above {gbp(YEAR.corporationTax.upperLimit)}</td>
+            <td>{pct(YEAR.corporationTax.mainRate)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Dividend tax rates — up 2 points from 6 April 2026</caption>
+        <thead>
+          <tr>
+            <th scope="col">Band</th>
+            <th scope="col">2025/26</th>
+            <th scope="col">{YEAR.label}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Ordinary (basic)</td><td>8.75%</td><td>{pct(YEAR.incomeTax.dividend.ordinaryRate)}</td></tr>
+          <tr><td>Upper (higher)</td><td>33.75%</td><td>{pct(YEAR.incomeTax.dividend.upperRate)}</td></tr>
+          <tr><td>Additional</td><td>39.35%</td><td>{pct(YEAR.incomeTax.dividend.additionalRate)}</td></tr>
+          <tr><td>Dividend allowance</td><td>{gbp(500)}</td><td>{gbp(YEAR.incomeTax.dividend.allowance)}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>What the numbers leave out</h2>
+    <p>
+      Tax is only part of this decision, and the non-tax factors often matter more.
+    </p>
+    <ul>
+      <li>
+        <strong>Limited liability.</strong> A company is a separate legal person. A sole trader is
+        personally liable for business debts. For anything with real risk attached this can outweigh
+        every tax consideration here.
+      </li>
+      <li>
+        <strong>Pension contributions.</strong> A company can contribute to your pension as an
+        allowable expense with no NI and no income tax, which is often the most efficient extraction
+        route of all and is not modelled here.
+      </li>
+      <li>
+        <strong>IR35 and off-payroll working.</strong> If you contract through a company for a
+        single client, the rules may treat you as an employee for tax. That changes everything and
+        this calculator does not assess it.
+      </li>
+      <li>
+        <strong>Splitting income with a spouse.</strong> A genuine shareholding can use a second
+        personal allowance and basic rate band. It must be a real commercial arrangement, not a
+        paper one.
+      </li>
+      <li>
+        <strong>Admin and disclosure.</strong> A company means statutory accounts, a confirmation
+        statement, a corporation tax return, PAYE, and your accounts and address publicly visible at
+        Companies House.
+      </li>
+      <li>
+        <strong>Getting out is not free.</strong> Closing a company with retained profit means a
+        striking-off or a liquidation, each with its own cost and tax treatment.
+      </li>
+    </ul>
+    <p class="warning">
+      This is a tax comparison, not advice. Incorporating is difficult to unwind and interacts with
+      IR35, VAT, pensions and your personal circumstances. Speak to an accountant before deciding.
+    </p>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'At what profit is it worth going limited in 2026/27?',
+        answer:
+          'There is no longer a clean threshold. If you draw all the profit each year, a sole trader is usually cheaper at almost every level once the 2026/27 dividend rates and 15% employer NI are counted. A company pulls ahead when you can leave profit inside it, when you want limited liability, or when company pension contributions are part of the plan.',
+      },
+      {
+        question: 'What salary should a director take?',
+        answer: `Usually the personal allowance of ${gbp(YEAR.incomeTax.personalAllowance)}. It uses the allowance in full and the whole salary plus the employer NI on it is deductible against corporation tax, which more than offsets the NI cost. A lower salary of ${gbp(YEAR.nationalInsurance.employer.secondaryThreshold)} avoids employer NI but wastes allowance and, being below the ${gbp(YEAR.nationalInsurance.lowerEarningsLimit)} Lower Earnings Limit, does not earn a State Pension year.`,
+      },
+      {
+        question: 'Can I claim the Employment Allowance as a one-person company?',
+        answer:
+          'No. A company whose only employee is also a director is specifically excluded. Taking on a second employee earning above the secondary threshold can make the company eligible, but only if that is a genuine employment.',
+      },
+      {
+        question: 'Why is corporation tax 26.5% and not 25%?',
+        answer:
+          'Between £50,000 and £250,000 of profit, marginal relief is withdrawn as profits rise. The company pays the 25% main rate less a relief of 3/200 of the gap to £250,000, so each additional pound of profit in that range is effectively taxed at 26.5%. Above £250,000 the rate settles back to a flat 25%.',
+      },
+      {
+        question: 'Do I have to take dividends every year?',
+        answer:
+          'No, and that flexibility is the main advantage. Profit can stay in the company indefinitely, having borne only corporation tax. You choose when to draw it — a later year, spread across two tax years, or eventually on winding the company up.',
+      },
+      {
+        question: 'How much do accountants charge for a limited company?',
+        answer:
+          'Typically £900 to £2,000 a year for a small company, against £250 to £600 for a sole trader Self Assessment return. The calculator defaults to £1,200 of extra cost, which you can change. A tax saving smaller than the fee is not a saving.',
+      },
+      {
+        question: 'Does this work for Scottish taxpayers?',
+        answer:
+          'Partly. Scottish rates apply to salary but not to dividends, which are taxed at UK rates everywhere. A Scottish sole trader pays Scottish rates on all profit, which shifts the comparison — usually making incorporation slightly more attractive there than elsewhere in the UK.',
+      },
+    ]}
+  />
+</ToolLayout>

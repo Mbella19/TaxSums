@@ -1,0 +1,143 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+
+/**
+ * The rate changelog.
+ *
+ * Two purposes. It shows readers the site is actively maintained through each
+ * Budget — the thing that separates a calculator you can trust from one
+ * abandoned in 2023 — and it gives other sites something concrete to link to.
+ */
+const entries = [
+  {
+    date: '2026-08-07',
+    title: 'Site launched with 2026/27 rates',
+    changes: [
+      'All twelve calculators built against the 2026/27 tax year.',
+      'Every rate verified against HMRC, Revenue Scotland, the Welsh Revenue Authority and gov.scot.',
+      'Calculation engine covered by 112 unit tests, including HMRC worked examples and band boundaries.',
+    ],
+  },
+  {
+    date: '2026-04-06',
+    title: '2026/27 tax year begins',
+    changes: [
+      'Dividend ordinary rate 8.75% → 10.75%, upper rate 33.75% → 35.75%. Additional rate unchanged at 39.35%.',
+      'Approved mileage allowance 45p → 55p for the first 10,000 miles — the first change since 2011.',
+      'Zero-emission company car appropriate percentage 3% → 4%. Bands below 75 g/km up 1 point; 75 g/km and above frozen.',
+      'Car fuel benefit multiplier → £29,200. Van benefit → £4,170. Van fuel benefit → £798.',
+      'Statutory redundancy weekly pay cap £719 → £751 (£783 in Northern Ireland), maximum payment → £22,530.',
+      'Student loan thresholds: Plan 1 → £26,900, Plan 2 → £29,385, Plan 4 → £33,795. Plan 5 frozen at £25,000, postgraduate frozen at £21,000.',
+      'Scottish starter and basic rate band limits up 7.4%; higher, advanced and top thresholds frozen.',
+      'Income tax and National Insurance thresholds frozen for a further three years, to 2030/31.',
+    ],
+  },
+  {
+    date: '2025-11-26',
+    title: 'Autumn Budget 2025',
+    changes: [
+      'Dividend ordinary and upper rates announced to rise 2 percentage points from April 2026.',
+      'Income tax and National Insurance threshold freeze extended by three years to 2030/31.',
+      'Salary sacrifice National Insurance relief to be capped at £2,000 a year from April 2029.',
+      'Savings income rates UK-wide, and property income rates in England, Wales and Northern Ireland, to rise 2 points from April 2027 to 22%, 42% and 47%.',
+      'Cash ISA allowance to fall to £12,000 for under-65s from April 2027.',
+    ],
+  },
+  {
+    date: '2024-12-11',
+    title: 'Welsh higher residential LTT rates replaced',
+    changes: [
+      'Wales replaced its flat 4% additional property surcharge with a banded table running from 5% to 17%.',
+      'The higher rates have no nil-rate band, so a £150,000 buy-to-let now attracts LTT where a main home would not.',
+    ],
+  },
+  {
+    date: '2024-10-31',
+    title: 'SDLT additional property surcharge increased',
+    changes: ['Additional property surcharge in England and Northern Ireland 3% → 5%.'],
+  },
+];
+
+const format = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<BaseLayout
+  title="UK Tax Rate Changelog – What Changed and When | TaxSums"
+  description="A dated log of every UK tax rate change reflected in our calculators, from the Autumn Budget 2025 onwards, with the effect on each tool."
+  crumbs={[{ label: 'Changelog' }]}
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>Rate changelog</h1>
+      <p class="tool-standfirst">
+        Tax rates change every Budget, and calculators that are not maintained quietly become wrong.
+        This is the dated record of every change we have applied, so you can see exactly how current
+        the figures are.
+      </p>
+    </div>
+
+    <div class="tool-body">
+      <div class="prose">
+        {
+          entries.map((entry) => (
+            <section>
+              <h2>{entry.title}</h2>
+              <p class="verified">
+                <span>{format(entry.date)}</span>
+              </p>
+              <ul>
+                {entry.changes.map((change) => (
+                  <li>{change}</li>
+                ))}
+              </ul>
+            </section>
+          ))
+        }
+
+        <h2>How we keep up</h2>
+        <p>
+          Every rate lives in a single versioned data file — one file per tax year, typed against a
+          schema that will not compile if a figure is missing. A Budget is therefore a data change,
+          not a hunt through calculator code, and the test suite catches band boundary errors before
+          they reach the site.
+        </p>
+        <p>
+          We review after each Budget and each Spring Statement, and again at the start of every tax
+          year in April. The <a href="/rates/">rates page</a> shows the verification date on every
+          figure.
+        </p>
+        <p>
+          Spotted something wrong? <a href="/contact/">Tell us</a> — corrections are the most useful
+          thing anyone can send us, and they get fixed the same day.
+        </p>
+
+        <h2>Known upcoming changes</h2>
+        <p>These are announced but not yet in force. Our calculators use {YEAR.label} rates.</p>
+        <ul>
+          <li>
+            <strong>April 2027</strong> — savings income rates UK-wide and property income rates in
+            England, Wales and Northern Ireland rise 2 points. Cash ISA allowance falls to £12,000
+            for under-65s.
+          </li>
+          <li>
+            <strong>April 2027</strong> — Plan 2 student loan threshold frozen at £29,385 until April
+            2030.
+          </li>
+          <li>
+            <strong>April 2028</strong> — company car appropriate percentages for zero-emission
+            vehicles begin rising 2 points a year, reaching 9% in 2029/30.
+          </li>
+          <li>
+            <strong>April 2029</strong> — salary sacrifice National Insurance relief capped at £2,000
+            a year. <a href="/guides/salary-sacrifice-explained/">What that means</a>.
+          </li>
+          <li>
+            <strong>To 2030/31</strong> — income tax and National Insurance thresholds remain frozen.
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

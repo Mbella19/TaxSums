@@ -1,0 +1,168 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+import { guideBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+import { calculateTerminationTax } from '../../lib/redundancy';
+
+const guide = guideBySlug('is-redundancy-pay-taxable');
+const r = YEAR.redundancy;
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+
+// A realistic package, worked through the same engine as the calculator.
+const example = calculateTerminationTax(
+  {
+    redundancyPay: 28_000,
+    payInLieuOfNotice: 9_000,
+    holidayPay: 1_500,
+    otherIncomeThisTaxYear: 30_000,
+  },
+  YEAR,
+);
+---
+
+<GuideLayout guide={guide} sourceKey="redundancy">
+  <p class="tool-standfirst">
+    The first {gbp(r.terminationPaymentExemption)} of redundancy pay is tax free — but that
+    exemption is narrower than almost everyone assumes, and notice pay falls entirely outside it.
+  </p>
+
+  <h2>The short answer</h2>
+  <ul>
+    <li>
+      <strong>Redundancy pay</strong> — first {gbp(r.terminationPaymentExemption)} free of income
+      tax and National Insurance. Above that, income tax applies but National Insurance still does
+      not.
+    </li>
+    <li>
+      <strong>Pay in lieu of notice</strong> — fully taxable, with National Insurance. No part of
+      the exemption applies.
+    </li>
+    <li>
+      <strong>Holiday pay</strong> — fully taxable, with National Insurance.
+    </li>
+    <li>
+      <strong>Contractual bonus owed</strong> — fully taxable, with National Insurance.
+    </li>
+  </ul>
+
+  <h2>Three things people get wrong</h2>
+
+  <h3>1. It covers the redundancy payment, not the package</h3>
+  <p>
+    Employers frequently present an offer as "£30,000 tax free". Usually it is not. The exemption
+    applies only to genuine termination payments — statutory redundancy pay plus any enhanced or
+    ex-gratia element. Everything else in the package is ordinary earnings.
+  </p>
+
+  <h3>2. It is one {gbp(r.terminationPaymentExemption)} in total</h3>
+  <p>
+    Not per payment, not per element, and not renewed if payments straddle two tax years. It is a
+    single {gbp(r.terminationPaymentExemption)} across everything arising from the same employment.
+  </p>
+
+  <h3>3. Notice pay is taxable however it is labelled</h3>
+  <p>
+    Since April 2018 the post-employment notice pay rules mean payment in lieu of notice is taxed as
+    earnings regardless of what your contract says or how the payment is described. The old
+    distinction between contractual and non-contractual PILON no longer helps.
+  </p>
+
+  <h2>A worked example</h2>
+  <p>
+    Someone made redundant in October, having earned {gbp(30_000)} so far that tax year, receiving:
+  </p>
+  <div class="table-scroll">
+    <table>
+      <caption>A {gbp(example.totalPackage)} package</caption>
+      <thead>
+        <tr>
+          <th scope="col">Element</th>
+          <th scope="col">Amount</th>
+          <th scope="col">Treatment</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Redundancy pay</td>
+          <td>{gbp(28_000)}</td>
+          <td style="white-space:normal;text-align:right">Within the exemption — tax free</td>
+        </tr>
+        <tr>
+          <td>Pay in lieu of notice</td>
+          <td>{gbp(9_000)}</td>
+          <td style="white-space:normal;text-align:right">Fully taxable, plus NI</td>
+        </tr>
+        <tr>
+          <td>Holiday pay</td>
+          <td>{gbp(1_500)}</td>
+          <td style="white-space:normal;text-align:right">Fully taxable, plus NI</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>Income tax</td>
+          <td>{gbp(example.incomeTax)}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>National Insurance</td>
+          <td>{gbp(example.nationalInsurance)}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Actually received</td>
+          <td>{gbp(example.netPackage)}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <p>
+    {gbp(example.incomeTax + example.nationalInsurance)} of tax on a package presented as largely
+    tax free — all of it on the {gbp(10_500)} of notice and holiday pay.
+    <a href="/redundancy-pay-calculator/">Work out your own package</a>.
+  </p>
+
+  <h2>How to reduce the tax</h2>
+
+  <h3>Pay it into a pension</h3>
+  <p>
+    The most effective option by far. An employer contribution paid directly from the package
+    escapes income tax and National Insurance entirely — including on the taxable elements. Watch
+    the {gbp(YEAR.pensions.annualAllowance)} annual allowance, and check your scheme will accept a
+    contribution once employment has ended.
+  </p>
+
+  <h3>Consider the timing</h3>
+  <p>
+    The package is taxed in the year you receive it, stacked on income already earned. Being made
+    redundant late in a tax year, when your allowance and basic rate band are used up, pushes more
+    into higher rate. Where there is any flexibility about the leaving date, model both sides of 6
+    April.
+  </p>
+
+  <h3>Check your tax code afterwards</h3>
+  <p>
+    Employers often apply an emergency code to a final payment, which frequently overtaxes it. If
+    you do not start a new job immediately you can reclaim using form P50, or P53 for a lump sum,
+    rather than waiting until the year end.
+  </p>
+
+  <h2>What about the redundancy itself?</h2>
+  <p>
+    Statutory redundancy pay for {YEAR.label} uses a weekly pay cap of {gbp(r.weeklyPayCap)} —{' '}
+    {gbp(r.weeklyPayCapNorthernIreland)} in Northern Ireland — giving a statutory maximum of{' '}
+    {gbp(r.weeklyPayCap * r.maximumYears * r.weeksPerYear41Plus)}. Many employers pay more under a
+    contractual scheme, so check your contract and staff handbook.
+    <a href="/redundancy-pay-calculator/">Calculate your entitlement</a>.
+  </p>
+
+  <div class="note">
+    <strong>Take advice on a settlement agreement</strong>
+    <p>
+      If you are offered one, you must take independent legal advice for it to be binding — and the
+      employer normally pays for it. Use that advice. It is the point at which the numbers can still
+      change, and Acas offers free guidance on the redundancy process itself.
+    </p>
+  </div>
+</GuideLayout>

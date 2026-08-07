@@ -1,0 +1,228 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Faq from '../components/Faq.astro';
+import RedundancyCalculator from '../components/calculators/RedundancyCalculator';
+import { toolBySlug } from '../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+
+const tool = toolBySlug('redundancy-pay-calculator');
+const r = YEAR.redundancy;
+const gbp = (n: number) => `£${n.toLocaleString('en-GB')}`;
+const maximum = r.weeklyPayCap * r.maximumYears * r.weeksPerYear41Plus;
+---
+
+<ToolLayout tool={tool}>
+  <RedundancyCalculator slot="calculator" client:load />
+
+  <Fragment slot="explanation">
+    <h2>How statutory redundancy pay is worked out</h2>
+    <p>
+      You need at least two years of continuous service to qualify. After that, each full year
+      earns you a number of weeks' pay depending on how old you were <em>during that year</em> —
+      not how old you are now.
+    </p>
+    <ul>
+      <li>Years worked while aged 41 or over: {r.weeksPerYear41Plus} weeks' pay</li>
+      <li>Years worked while aged 22 to 40: {r.weeksPerYear22to40} week's pay</li>
+      <li>Years worked while under 22: {r.weeksPerYearUnder22} week's pay</li>
+    </ul>
+    <p>
+      Only your most recent {r.maximumYears} years count. That works in your favour: those are the
+      years most likely to sit in the {r.weeksPerYear41Plus}-week band.
+    </p>
+
+    <h3>The weekly pay cap</h3>
+    <p>
+      Whatever you actually earn, the calculation uses a maximum of{' '}
+      <strong>{gbp(r.weeklyPayCap)} a week</strong> from 6 April 2026 —{' '}
+      {gbp(r.weeklyPayCapNorthernIreland)} in Northern Ireland. So the statutory maximum anyone can
+      receive is {r.maximumYears} × {r.weeksPerYear41Plus} × {gbp(r.weeklyPayCap)} ={' '}
+      <strong>{gbp(maximum)}</strong>, however much you earn.
+    </p>
+    <p>
+      The cap rose 4.4% from {gbp(719)} in {new Date().getFullYear() - 1}. The rate that applies is
+      the one in force on the date your employment ends.
+    </p>
+
+    <h2>The part gov.uk does not tell you</h2>
+    <p>
+      The official calculator gives you the statutory figure and stops. What most people actually
+      want to know is what lands in their bank account — and the tax rules are widely
+      misunderstood.
+    </p>
+
+    <h3>The £30,000 exemption is narrower than people think</h3>
+    <p>
+      The first {gbp(r.terminationPaymentExemption)} of a qualifying termination payment is free of
+      both income tax and National Insurance. Three things about it catch people out:
+    </p>
+    <ul>
+      <li>
+        <strong>It covers the redundancy payment, not the package.</strong> Notice pay and holiday
+        pay fall outside it entirely.
+      </li>
+      <li>
+        <strong>It is one {gbp(r.terminationPaymentExemption)} in total</strong>, across every
+        payment arising from the same employment — not per payment and not per element.
+      </li>
+      <li>
+        <strong>Above the exemption there is still no National Insurance</strong> on the redundancy
+        element, only income tax. That is a genuine saving over ordinary pay.
+      </li>
+    </ul>
+
+    <h3>Notice pay is fully taxable</h3>
+    <p>
+      Payment in lieu of notice is treated as ordinary earnings under the post-employment notice pay
+      rules, whatever your contract says. It is taxed in full and bears employee and employer
+      National Insurance. So is outstanding holiday pay. Employers sometimes present the whole
+      package as "£30,000 tax free" — it usually is not.
+    </p>
+
+    <h3>Timing can save you money</h3>
+    <p>
+      The package is taxed in the tax year you receive it, stacked on top of whatever you have
+      already earned. If you are made redundant late in a tax year and have already used your
+      personal allowance and basic rate band, receiving a large payment then can push it into higher
+      rate. Where there is a choice about the leaving date, it is worth modelling both sides of 6
+      April.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>{YEAR.label} redundancy figures</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>Statutory redundancy pay from 6 April 2026</caption>
+        <tbody>
+          <tr><td>Weekly pay cap (Great Britain)</td><td>{gbp(r.weeklyPayCap)}</td></tr>
+          <tr><td>Weekly pay cap (Northern Ireland)</td><td>{gbp(r.weeklyPayCapNorthernIreland)}</td></tr>
+          <tr><td>Maximum years counted</td><td>{r.maximumYears}</td></tr>
+          <tr><td>Maximum statutory payment</td><td>{gbp(maximum)}</td></tr>
+          <tr><td>Minimum service to qualify</td><td>2 years</td></tr>
+          <tr><td>Tax-free termination payment</td><td>{gbp(r.terminationPaymentExemption)}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>How each part of a package is treated</caption>
+        <thead>
+          <tr>
+            <th scope="col">Payment</th>
+            <th scope="col">Income tax</th>
+            <th scope="col">National Insurance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Statutory redundancy pay</td>
+            <td>Within the {gbp(30000)}</td>
+            <td>Never</td>
+          </tr>
+          <tr>
+            <td>Enhanced or ex-gratia redundancy</td>
+            <td>Within the {gbp(30000)}</td>
+            <td>Never</td>
+          </tr>
+          <tr>
+            <td>Pay in lieu of notice</td>
+            <td>Fully taxable</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>Outstanding holiday pay</td>
+            <td>Fully taxable</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>Contractual bonus owed</td>
+            <td>Fully taxable</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>Statutory notice period worked</td>
+            <td>Fully taxable</td>
+            <td>Yes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>Limits and things to check</h2>
+    <ul>
+      <li>
+        <strong>Contractual redundancy schemes.</strong> Many employers pay far more than the
+        statutory minimum. Check your contract, staff handbook or any collective agreement — the
+        statutory figure is a floor, not an entitlement ceiling.
+      </li>
+      <li>
+        <strong>Notice periods.</strong> Statutory notice is one week per year of service up to 12
+        weeks, and it is separate from redundancy pay. Your contract may give more.
+      </li>
+      <li>
+        <strong>Only complete years count.</strong> Eleven months of service in a year adds nothing.
+      </li>
+      <li>
+        <strong>Settlement agreements.</strong> If you are offered one you must take independent
+        legal advice, which the employer normally pays for. Do not sign before you have.
+      </li>
+      <li>
+        <strong>Pension contributions.</strong> Paying part of a taxable package into a pension can
+        remove the tax on it entirely, which is often the single most valuable move available.
+      </li>
+      <li>
+        <strong>Your tax may be wrong at first.</strong> Employers often apply an emergency code to
+        a final payment. You may be owed a refund, which you can claim with form P50 or P53 rather
+        than waiting for the year end.
+      </li>
+    </ul>
+    <p class="note">
+      If you believe the redundancy itself was unfair, or you were not consulted properly, that is a
+      separate matter from the payment. Acas offers free advice and there are strict time limits —
+      normally three months less one day.
+    </p>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'Is redundancy pay taxable?',
+        answer: `The first ${gbp(30000)} of a genuine redundancy payment is free of income tax and National Insurance. Anything above that is taxed as income but still bears no National Insurance. Notice pay and holiday pay are not covered by the exemption at all — they are fully taxable and subject to NI.`,
+      },
+      {
+        question: 'What is the maximum statutory redundancy pay in 2026/27?',
+        answer: `${gbp(maximum)}. That is ${r.maximumYears} years of service, all at the ${r.weeksPerYear41Plus}-week rate for those aged 41 and over, using the ${gbp(r.weeklyPayCap)} weekly cap. Earning more than ${gbp(r.weeklyPayCap)} a week does not increase it.`,
+      },
+      {
+        question: 'How many years do I need to qualify?',
+        answer:
+          'Two years of continuous service with the same employer. Below that there is no statutory entitlement, although you are still owed notice pay, accrued holiday and anything your contract promises.',
+      },
+      {
+        question: 'Does my age when I was made redundant matter?',
+        answer:
+          'It is your age during each year of service that counts, not your age at the end. Someone made redundant at 45 after five years earns 1.5 weeks for the years they were 41 to 44, and one week for the year they were 40 — seven weeks in total.',
+      },
+      {
+        question: 'Is pay in lieu of notice taxed?',
+        answer:
+          'Yes, in full, with National Insurance. The post-employment notice pay rules mean it is treated as earnings regardless of what your contract says. It is the most common misunderstanding about redundancy tax, because people assume the whole package falls under the £30,000.',
+      },
+      {
+        question: 'Can I put my redundancy payment into a pension?',
+        answer:
+          'Yes, and it is often the most efficient thing to do with the taxable part. An employer contribution direct from the package avoids income tax and National Insurance entirely. Watch the annual allowance, and note that leaving employment can affect what your scheme will accept.',
+      },
+      {
+        question: 'Do I pay tax on redundancy if I get a new job straight away?',
+        answer:
+          'The redundancy payment is taxed the same way regardless. But a new salary in the same tax year increases your total income, which can push more of any amount above £30,000 into a higher band. Timing the payment across two tax years, where possible, can reduce this.',
+      },
+    ]}
+  />
+</ToolLayout>

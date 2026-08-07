@@ -1,0 +1,198 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import Faq from '../../components/Faq.astro';
+import TakeHomeCalculator from '../../components/calculators/TakeHomeCalculator';
+import { toolBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+import { calculateIncomeTax } from '../../lib/income-tax';
+
+const tool = toolBySlug('take-home-pay-calculator/scotland');
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
+
+// Worked out at build time from the same engine the calculator uses, so the
+// comparison table can never drift from the tool above it.
+const comparisonSalaries = [20000, 30000, 43662, 50000, 75000, 100000, 150000];
+const comparison = comparisonSalaries.map((salary) => {
+  const scotland = calculateIncomeTax({ grossIncome: salary, region: 'scotland' }, YEAR).total;
+  const ruk = calculateIncomeTax({ grossIncome: salary, region: 'england-nireland' }, YEAR).total;
+  return { salary, scotland, ruk, difference: scotland - ruk };
+});
+
+// The salary at which a Scottish taxpayer starts paying more.
+const crossover = (() => {
+  for (let salary = 12570; salary <= 60000; salary += 1) {
+    const scotland = calculateIncomeTax({ grossIncome: salary, region: 'scotland' }, YEAR).total;
+    const ruk = calculateIncomeTax({ grossIncome: salary, region: 'england-nireland' }, YEAR).total;
+    if (scotland > ruk) return salary;
+  }
+  return null;
+})();
+---
+
+<ToolLayout tool={tool}>
+  <TakeHomeCalculator slot="calculator" fixedRegion="scotland" client:load />
+
+  <Fragment slot="explanation">
+    <h2>How Scottish income tax differs</h2>
+    <p>
+      Scotland has set its own income tax rates and bands since 2017. For {YEAR.label} there are
+      six bands rather than the three used in England, Wales and Northern Ireland, running from a
+      19% starter rate to a 48% top rate.
+    </p>
+    <p>
+      Everything else is unchanged. National Insurance, student loan repayments, the personal
+      allowance and its withdrawal above £100,000 are all set UK-wide. Dividend and savings income
+      are not devolved either, so a Scottish company director pays Scottish rates on salary but UK
+      rates on dividends.
+    </p>
+
+    <h3>Where the crossover falls</h3>
+    <p>
+      Scottish taxpayers pay slightly <strong>less</strong> than the rest of the UK on lower
+      salaries, because of the 19% starter rate.
+      {
+        crossover && (
+          <>
+            {' '}The position reverses at about <strong>{gbp(crossover)}</strong>, and the gap
+            widens steadily after that.
+          </>
+        )
+      }
+    </p>
+    <p>
+      The sharpest step is at £43,662. Above that a Scottish taxpayer pays 42% while someone
+      elsewhere in the UK is still on 20% until £50,270 — a 22 point difference across that band,
+      and the single biggest cause of the gap.
+    </p>
+
+    <h3>Changes for {YEAR.label}</h3>
+    <p>
+      The starter and basic rate band limits rose by 7.4%, which slightly reduces tax for lower
+      earners. The higher, advanced and top rate thresholds were frozen, so more Scottish taxpayers
+      are pulled into them as pay rises.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>Scottish income tax bands for {YEAR.label}</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>Rates apply to income above the £12,570 personal allowance</caption>
+        <thead>
+          <tr>
+            <th scope="col">Band</th>
+            <th scope="col">Taxable income</th>
+            <th scope="col">Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            YEAR.incomeTax.bands.scotland.map((band, index, bands) => {
+              const from = index === 0 ? 0 : (bands[index - 1]!.upTo ?? 0);
+              return (
+                <tr>
+                  <td>{band.label}</td>
+                  <td>
+                    {gbp(from)}{band.upTo === null ? ' and above' : ` to ${gbp(band.upTo)}`}
+                  </td>
+                  <td>{pct(band.rate)}</td>
+                </tr>
+              );
+            })
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Scotland compared with the rest of the UK</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>Income tax only — National Insurance is identical across the UK</caption>
+        <thead>
+          <tr>
+            <th scope="col">Salary</th>
+            <th scope="col">Scotland</th>
+            <th scope="col">Rest of UK</th>
+            <th scope="col">Difference</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            comparison.map((row) => (
+              <tr>
+                <td>{gbp(row.salary)}</td>
+                <td>{gbp(row.scotland)}</td>
+                <td>{gbp(row.ruk)}</td>
+                <td>
+                  {row.difference === 0
+                    ? 'Same'
+                    : `${row.difference > 0 ? '+' : '−'}${gbp(Math.abs(row.difference))}`}
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>What this calculator does not do</h2>
+    <ul>
+      <li>
+        <strong>It works annually.</strong> Payroll assesses National Insurance per pay period, so
+        uneven pay produces different payslip figures.
+      </li>
+      <li>
+        <strong>It assumes a standard S-prefixed tax code.</strong> Your code determines whether
+        HMRC treats you as a Scottish taxpayer at all.
+      </li>
+      <li>
+        <strong>It covers employment income only.</strong> Dividends and savings interest are taxed
+        at UK rates, not Scottish ones, and are not included here.
+      </li>
+    </ul>
+    <div class="note">
+      <strong>Who counts as a Scottish taxpayer?</strong>
+      <p>
+        It depends on where your main home is for most of the tax year, not where you work or where
+        your employer is based. If you move part-way through a year, the nation you lived in
+        longest usually decides it. HMRC sets the S prefix on your tax code from the address you
+        have given them, so keeping that up to date matters.
+      </p>
+    </div>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'At what salary do Scots start paying more tax?',
+        answer: crossover
+          ? `At around £${crossover.toLocaleString('en-GB')}. Below that the 19% starter rate leaves Scottish taxpayers slightly better off. Above it the higher Scottish rates take over, and the gap grows quickly past £43,662 where the 42% higher rate begins.`
+          : 'Scottish taxpayers pay slightly less at lower salaries and more at higher ones, with the crossover in the low £30,000s.',
+      },
+      {
+        question: 'Do I pay Scottish income tax if I work in Scotland but live in England?',
+        answer:
+          'No. Scottish income tax follows where you live, not where you work. If your main home is in England you pay the rest-of-UK rates even if your employer and workplace are in Scotland.',
+      },
+      {
+        question: 'Is National Insurance different in Scotland?',
+        answer:
+          'No. National Insurance is set by the UK government and is identical across all four nations. Only income tax is devolved to Scotland, and only on earned income — not on dividends or savings interest.',
+      },
+      {
+        question: 'Why is my marginal rate 67.5%?',
+        answer:
+          'Between £100,000 and £125,140 the personal allowance is withdrawn at £1 for every £2 earned. In Scotland that sits on top of the 45% advanced rate, giving an effective marginal rate of 67.5% — the highest anywhere in the UK. A pension contribution across that range gets relief at the same rate.',
+      },
+      {
+        question: 'Does Scottish income tax affect my pension tax relief?',
+        answer:
+          'Yes. Relief is given at your Scottish marginal rate, so a Scottish higher rate taxpayer gets 42% rather than 40%. Under relief at source your provider still only reclaims 20%, so the extra must be claimed from HMRC — through Self Assessment or by contacting them directly.',
+      },
+    ]}
+  />
+</ToolLayout>

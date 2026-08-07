@@ -1,0 +1,138 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+---
+
+<BaseLayout
+  title="How We Calculate – Methodology | TaxSums"
+  description="How our UK tax calculators work: where the rates come from, how each deduction is calculated, what we test, and the assumptions and limits behind every figure."
+  crumbs={[{ label: 'Methodology' }]}
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>How we calculate</h1>
+      <p class="tool-standfirst">
+        Tax calculators are easy to build and easy to get subtly wrong. This page sets out exactly
+        what ours do, so you can judge whether to trust them.
+      </p>
+    </div>
+
+    <div class="tool-body">
+      <div class="prose">
+        <h2>Where the rates come from</h2>
+        <p>
+          Every figure is taken from a primary source: HMRC, Revenue Scotland, the Welsh Revenue
+          Authority, or the Scottish Government. We do not take rates from other calculators, news
+          articles or accountancy blogs, because those introduce a second chance to be wrong.
+        </p>
+        <p>
+          All rates live in one versioned data file per tax year, typed against a schema that will
+          not compile if a figure is missing. Every entry carries the source URL and the date it was
+          last checked, and both are shown on the pages that use it.
+          <a href="/rates/">See every rate with its source</a>.
+        </p>
+
+        <h2>How each deduction is worked out</h2>
+
+        <h3>Income tax</h3>
+        <p>
+          Applied progressively to income after the personal allowance. The allowance is reduced by
+          £1 for every £2 of adjusted net income above {`£${YEAR.incomeTax.taperThreshold.toLocaleString('en-GB')}`}.
+          Band limits are measured on taxable income, which is the correct legal basis — a detail
+          that catches out calculators using gross-income equivalents at the additional rate
+          boundary.
+        </p>
+
+        <h3>National Insurance</h3>
+        <p>
+          Charged on earnings, not taxable income, so the personal allowance is irrelevant and
+          benefits in kind are excluded. We calculate annually. Real payroll assesses each pay period
+          separately and does not true up across the year, so uneven pay produces different payslip
+          figures — every relevant page says so.
+        </p>
+
+        <h3>Student loans</h3>
+        <p>
+          A percentage of earnings above the plan threshold, rounded down to whole pounds as HMRC
+          does. Postgraduate loans are calculated alongside undergraduate plans, not instead of them.
+          Only salary sacrifice reduces the earnings figure used.
+        </p>
+
+        <h3>Pensions</h3>
+        <p>
+          We model the three arrangements separately, because they produce different take-home pay
+          for the same contribution:
+        </p>
+        <ul>
+          <li><strong>Salary sacrifice</strong> reduces the base for income tax, National Insurance and student loans.</li>
+          <li><strong>Net pay</strong> reduces the base for income tax only.</li>
+          <li><strong>Relief at source</strong> reduces neither, but extends the basic rate band and reduces adjusted net income.</li>
+        </ul>
+        <p>
+          All three reduce adjusted net income, which is why any of them can rescue a tapered
+          personal allowance.
+        </p>
+
+        <h3>Property taxes</h3>
+        <p>
+          The three UK regimes differ in structure, not just in numbers, so each is modelled on its
+          own terms: England and Northern Ireland add a surcharge to every band, Scotland charges a
+          flat supplement on the whole price alongside the banded tax, and Wales uses an entirely
+          separate band table.
+        </p>
+
+        <h2>What we test</h2>
+        <p>
+          The calculation engine is pure functions with no interface code, covered by 112 unit tests.
+          Expected values come from HMRC worked examples and published figures, not from our own
+          output. The suite includes the cases most likely to be wrong:
+        </p>
+        <ul>
+          <li>The personal allowance taper at £100,000 and £125,140, and the 60% marginal rate between.</li>
+          <li>The National Insurance step at the upper earnings limit.</li>
+          <li>The additional rate boundary at £125,140 of taxable income — where a £150,000 salary must produce exactly £53,703 of income tax.</li>
+          <li>The first-time buyer stamp duty cliff at £500,001.</li>
+          <li>The 26.5% effective marginal corporation tax rate between £50,000 and £250,000.</li>
+          <li>Stacked Plan 2 and postgraduate loan repayments.</li>
+          <li>All six Scottish bands, and the point where Scottish tax overtakes the rest of the UK.</li>
+        </ul>
+        <p>
+          We also cross-check headline results against established calculators. Where we disagree we
+          investigate rather than assume we are right — that is how the additional rate boundary
+          error was found and fixed before launch.
+        </p>
+
+        <h2>What we do not do</h2>
+        <ul>
+          <li><strong>We do not collect your data.</strong> Every calculation runs in your browser. Nothing you type is sent anywhere or stored.</li>
+          <li><strong>We do not require an account.</strong> No sign-up, no email, no paywall.</li>
+          <li><strong>We do not model every edge case.</strong> Each tool lists what it cannot handle rather than failing silently.</li>
+          <li><strong>We do not give advice.</strong> These are estimates to help you understand your position and ask better questions.</li>
+        </ul>
+
+        <h2>Rounding</h2>
+        <p>
+          Calculations run at full precision and round to the penny at the end. Student loan
+          repayments are the exception — HMRC rounds each down to whole pounds and so do we. Headline
+          figures are displayed to the nearest pound; detailed tables show pence where it matters.
+          You may see a penny of difference against payroll software, which rounds at different
+          points.
+        </p>
+
+        <h2>Corrections</h2>
+        <p>
+          If you find a figure you believe is wrong, <a href="/contact/">tell us</a>. Send the inputs
+          you used and what you expected. Corrections are the most useful thing anyone sends us and
+          they are fixed the same day, then recorded on the{' '}
+          <a href="/changelog/">changelog</a>.
+        </p>
+
+        <p class="note">
+          These calculators provide information, not financial or tax advice. They cannot account for
+          every personal circumstance. Check anything important with an accountant or with HMRC
+          before acting on it.
+        </p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,173 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Faq from '../components/Faq.astro';
+import MortgageOverpaymentCalculator from '../components/calculators/MortgageOverpaymentCalculator';
+import { toolBySlug } from '../data/site';
+import { overpaymentSaving } from '../lib/mortgage';
+
+const tool = toolBySlug('mortgage-overpayment-calculator');
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+
+// Worked examples generated from the same engine as the calculator.
+const terms = { balance: 200000, annualRate: 0.045, termMonths: 300 };
+const examples = [50, 100, 200, 300, 500].map((amount) => {
+  const result = overpaymentSaving(terms, amount);
+  return {
+    amount,
+    interestSaved: result.interestSaved,
+    yearsSaved: result.yearsSaved,
+    monthsSaved: result.monthsSavedRemainder,
+    totalOverpaid: result.totalOverpaid,
+  };
+});
+---
+
+<ToolLayout tool={tool}>
+  <MortgageOverpaymentCalculator slot="calculator" client:load />
+
+  <Fragment slot="explanation">
+    <h2>Why overpaying works so well</h2>
+    <p>
+      A mortgage payment is split between interest and capital. Early in the term almost all of it
+      is interest, because the interest is charged on a large balance. An overpayment goes entirely
+      against the capital, so it removes not just that pound of debt but every future pound of
+      interest that would have been charged on it.
+    </p>
+    <p>
+      That compounding is why a modest, consistent overpayment does so much more than it looks like
+      it should. On a {gbp(200000)} mortgage at 4.5% over 25 years, {gbp(200)} a month —{' '}
+      {gbp(2400)} a year — saves{' '}
+      {gbp(examples.find((e) => e.amount === 200)!.interestSaved)} in interest and clears the debt{' '}
+      {examples.find((e) => e.amount === 200)!.yearsSaved} years earlier.
+    </p>
+
+    <h3>Term reduction, not payment reduction</h3>
+    <p>
+      When you overpay, lenders normally keep your monthly payment the same and shorten the term.
+      That is what produces the saving. Some will instead recalculate the payment downward over the
+      original term, which feels nicer month to month but saves far less interest. If you are
+      overpaying deliberately, check which your lender does and ask for term reduction.
+    </p>
+
+    <h3>The 10% rule</h3>
+    <p>
+      Most fixed-rate deals allow overpayments of up to 10% of the outstanding balance each year
+      without penalty. Go over that and an early repayment charge applies — typically 1% to 5% of
+      the excess, often tapering as the fix nears its end. Tracker and standard variable rate
+      mortgages usually have no limit at all.
+    </p>
+
+    <h3>Overpay, or save instead?</h3>
+    <p>
+      Overpaying gives you a guaranteed return equal to your mortgage rate, tax free. A savings
+      account has to beat that rate <em>after</em> tax to win. At a 4.5% mortgage rate, a basic rate
+      taxpayer needs a savings account paying about 5.6% before tax to break even; a higher rate
+      taxpayer needs 7.5%.
+    </p>
+    <p>
+      The catch is access. Money paid into a mortgage is very hard to get back out. Build an
+      emergency fund first, clear any credit card or car finance debt at a higher rate than your
+      mortgage, and make sure you are getting any employer pension match — those all beat
+      overpaying.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>What different overpayments achieve</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>On a {gbp(200000)} mortgage at 4.5% over 25 years</caption>
+        <thead>
+          <tr>
+            <th scope="col">Extra per month</th>
+            <th scope="col">Interest saved</th>
+            <th scope="col">Time saved</th>
+            <th scope="col">Total put in</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            examples.map((row) => (
+              <tr>
+                <td>{gbp(row.amount)}</td>
+                <td>{gbp(row.interestSaved)}</td>
+                <td>
+                  {row.yearsSaved}y {row.monthsSaved}m
+                </td>
+                <td>{gbp(row.totalOverpaid)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      Notice that the saving grows faster than the amount you put in. Doubling the overpayment more
+      than doubles the interest saved, because each extra pound compounds across a shorter and
+      shorter remaining term.
+    </p>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>Assumptions and limits</h2>
+    <ul>
+      <li>
+        <strong>A fixed rate for the whole term.</strong> In reality you will remortgage several
+        times. Rate changes will move these figures, though the direction of the effect does not
+        change.
+      </li>
+      <li>
+        <strong>Interest calculated monthly.</strong> Most UK lenders calculate daily, which makes
+        overpaying very slightly more effective than shown here. A few still calculate annually,
+        where the timing of your overpayment within the year matters.
+      </li>
+      <li>
+        <strong>No fees.</strong> Product fees, valuation fees and any early repayment charge are
+        not included.
+      </li>
+      <li>
+        <strong>A repayment mortgage.</strong> Interest-only mortgages behave completely
+        differently — overpayments there reduce the capital you must repay at the end.
+      </li>
+      <li>
+        <strong>No offset.</strong> If you have an offset mortgage, savings held against it achieve
+        a similar effect while remaining accessible.
+      </li>
+    </ul>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'What does £200 a month extra actually save me?',
+        answer: `On a typical £200,000 mortgage at 4.5% over 25 years, £200 a month saves about ${gbp(examples.find((e) => e.amount === 200)!.interestSaved)} in interest and clears the mortgage roughly ${examples.find((e) => e.amount === 200)!.yearsSaved} years early. The exact figure depends on your balance, rate and remaining term — put yours into the calculator above.`,
+      },
+      {
+        question: 'Is it better to overpay or put money in savings?',
+        answer:
+          'Compare your mortgage rate with your savings rate after tax. Overpaying gives a guaranteed, tax-free return equal to your mortgage rate. At 4.5%, a basic rate taxpayer needs a savings account paying about 5.6% gross to match it, and a higher rate taxpayer about 7.5%. Savings stay accessible though, which is worth something.',
+      },
+      {
+        question: 'Will I be charged for overpaying?',
+        answer:
+          'Usually only if you exceed the annual allowance, which is typically 10% of the outstanding balance on a fixed-rate deal. Below that there is normally no charge. Tracker and variable rate mortgages often have no limit. Check your mortgage offer, because the penalty can be several thousand pounds.',
+      },
+      {
+        question: 'Should I reduce my term or my monthly payment?',
+        answer:
+          'Reducing the term saves far more interest, because you keep paying the same amount against a shrinking balance. Reducing the payment gives you monthly breathing room instead. Lenders often default to one or the other, so state which you want.',
+      },
+      {
+        question: 'Is a lump sum or monthly overpayment better?',
+        answer:
+          'A lump sum paid earlier saves more, because it removes interest from the largest balance for the longest time. But regular overpayments are easier to sustain and easier to stop if your circumstances change. Both are modelled in the calculator.',
+      },
+      {
+        question: 'Should I overpay my mortgage or my pension?',
+        answer:
+          'Pension contributions get tax relief at your marginal rate, which is 20%, 40% or even 60% between £100,000 and £125,140 — usually a bigger immediate gain than a 4-5% mortgage rate. But a pension is locked until 57. Many people do the employer match first, then overpay, then top up the pension.',
+      },
+    ]}
+  />
+</ToolLayout>

@@ -1,0 +1,153 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+import { guideBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+import { calculateStudentLoans } from '../../lib/student-loans';
+
+const guide = guideBySlug('student-loan-repayment-thresholds');
+const gbp = (n: number) => `£${n.toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(0)}%`;
+
+const salaries = [25_000, 30_000, 40_000, 50_000, 70_000];
+const plans = ['plan1', 'plan2', 'plan4', 'plan5'] as const;
+---
+
+<GuideLayout guide={guide} sourceKey="studentLoans">
+  <p class="tool-standfirst">
+    Which plan you are on, what you repay, and the two things almost everyone gets wrong about UK
+    student loans.
+  </p>
+
+  <h2>{YEAR.label} thresholds</h2>
+  <div class="table-scroll">
+    <table>
+      <caption>Repayments are 9% of income above the threshold, or 6% for postgraduate loans</caption>
+      <thead>
+        <tr>
+          <th scope="col">Plan</th>
+          <th scope="col">Threshold</th>
+          <th scope="col">Rate</th>
+          <th scope="col">Who is on it</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          Object.values(YEAR.studentLoans).map((plan) => (
+            <tr>
+              <td>{plan.label}</td>
+              <td>{gbp(plan.threshold)}</td>
+              <td>{pct(plan.rate)}</td>
+              <td style="white-space:normal;text-align:left;max-width:26rem">{plan.description}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <h2>The two things people get wrong</h2>
+
+  <h3>1. A postgraduate loan stacks on top</h3>
+  <p>
+    It is not instead of your undergraduate plan — it is as well as. Someone on Plan 2 with a
+    master's loan repays 9% above {gbp(YEAR.studentLoans.plan2.threshold)}{' '}
+    <em>and</em> 6% above {gbp(YEAR.studentLoans.postgrad.threshold)}. Once income clears both
+    thresholds that is 15% of the top slice of their salary going to loans alone, on top of income
+    tax and National Insurance.
+  </p>
+  <p>
+    On {gbp(50_000)}, a Plan 2 borrower with a postgraduate loan repays{' '}
+    {gbp(calculateStudentLoans(50_000, ['plan2', 'postgrad'], YEAR).total)} a year against{' '}
+    {gbp(calculateStudentLoans(50_000, ['plan2'], YEAR).total)} without it.
+  </p>
+
+  <h3>2. It is 9% of the excess, not of everything</h3>
+  <p>
+    You repay 9% of what you earn <em>above</em> the threshold, not 9% of your whole salary. On
+    Plan 2 at {gbp(30_000)} that is 9% of {gbp(30_000 - YEAR.studentLoans.plan2.threshold)} —{' '}
+    {gbp(calculateStudentLoans(30_000, ['plan2'], YEAR).total)} for the year, about £5 a month. Each
+    plan's repayment is also rounded down to whole pounds, which is why a small pay rise sometimes
+    changes nothing at all.
+  </p>
+
+  <h2>What you would repay</h2>
+  <div class="table-scroll">
+    <table>
+      <caption>Annual repayment by salary and plan, {YEAR.label}</caption>
+      <thead>
+        <tr>
+          <th scope="col">Salary</th>
+          {plans.map((plan) => <th scope="col">{YEAR.studentLoans[plan].label}</th>)}
+          <th scope="col">Plan 2 + postgrad</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          salaries.map((salary) => (
+            <tr>
+              <td>{gbp(salary)}</td>
+              {plans.map((plan) => (
+                <td>{gbp(calculateStudentLoans(salary, [plan], YEAR).total)}</td>
+              ))}
+              <td>{gbp(calculateStudentLoans(salary, ['plan2', 'postgrad'], YEAR).total)}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Which plan am I on?</h2>
+  <ul>
+    <li>
+      <strong>Plan 1</strong> — English or Welsh course started before September 2012, or any
+      Scottish or Northern Irish student.
+    </li>
+    <li>
+      <strong>Plan 2</strong> — English or Welsh course started between September 2012 and July
+      2023. Its threshold is frozen at {gbp(YEAR.studentLoans.plan2.threshold)} from April 2027 to
+      April 2030.
+    </li>
+    <li>
+      <strong>Plan 4</strong> — funded by the Student Awards Agency for Scotland. The most generous
+      threshold at {gbp(YEAR.studentLoans.plan4.threshold)}.
+    </li>
+    <li>
+      <strong>Plan 5</strong> — English course started on or after 1 August 2023. The threshold is
+      fixed at {gbp(YEAR.studentLoans.plan5.threshold)} with no inflation link, and the loan runs for
+      40 years rather than 30.
+    </li>
+    <li><strong>Postgraduate Loan</strong> — a master's or doctoral loan, repaid alongside the above.</li>
+  </ul>
+  <p>
+    If you are unsure, sign in to your Student Loans Company account, or check your payslip: the
+    deduction line normally names the plan.
+  </p>
+
+  <h2>Should I pay it off early?</h2>
+  <p>
+    Usually not, and the reason is that a student loan does not behave like a debt. It is closer to
+    a graduate tax: repayments are a fixed share of income above a threshold, they stop if your
+    income falls, and the balance is written off after 30 years (40 for Plan 5) whether or not it is
+    paid.
+  </p>
+  <p>
+    Many borrowers — particularly on Plan 2 with a large balance and a middling income — will never
+    clear it, so overpaying simply hands money to the government that would otherwise have been
+    written off. Overpaying only helps if you are genuinely on track to repay in full before
+    write-off, which mainly means high earners with modest balances.
+  </p>
+  <p>
+    It also does not appear on your credit file and does not directly affect mortgage approval,
+    though the repayments do reduce the disposable income a lender assesses.
+    <a href="/mortgage-affordability-calculator/">See how much that costs you</a>.
+  </p>
+
+  <h2>Salary sacrifice reduces repayments</h2>
+  <p>
+    Student loan deductions are based on the same earnings figure as National Insurance, so salary
+    sacrifice pension contributions reduce them. Net pay and relief-at-source contributions do not.
+    On a Plan 2 loan that is a further 9% saving on whatever you sacrifice.
+    <a href="/guides/salary-sacrifice-explained/">How the arrangements differ</a>.
+  </p>
+</GuideLayout>

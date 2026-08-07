@@ -1,0 +1,136 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+import { guideBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+import { calculateIncomeTax } from '../../lib/income-tax';
+
+const guide = guideBySlug('scottish-income-tax-vs-rest-of-uk');
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+
+const tax = (salary: number, region: 'scotland' | 'england-nireland') =>
+  calculateIncomeTax({ grossIncome: salary, region }, YEAR).total;
+
+const rows = [20_000, 25_000, 30_000, 35_000, 43_662, 50_000, 60_000, 75_000, 100_000, 150_000].map(
+  (salary) => ({
+    salary,
+    scotland: tax(salary, 'scotland'),
+    ruk: tax(salary, 'england-nireland'),
+    difference: tax(salary, 'scotland') - tax(salary, 'england-nireland'),
+  }),
+);
+
+const crossover = (() => {
+  for (let salary = 12_570; salary <= 60_000; salary += 1) {
+    if (tax(salary, 'scotland') > tax(salary, 'england-nireland')) return salary;
+  }
+  return null;
+})();
+---
+
+<GuideLayout guide={guide} sourceKey="scottishIncomeTax">
+  <p class="tool-standfirst">
+    Scotland has six income tax bands to the rest of the UK's three. Below about{' '}
+    {crossover ? gbp(crossover) : '£30,000'} Scots pay slightly less; above it they pay
+    progressively more.
+  </p>
+
+  <h2>What is devolved and what is not</h2>
+  <p>
+    Scotland sets the rates and bands for <strong>earned income</strong> — salary, pension income,
+    rental profit and self-employed profit. Everything else stays UK-wide:
+  </p>
+  <ul>
+    <li><strong>National Insurance</strong> — identical across all four nations.</li>
+    <li><strong>The personal allowance</strong> — set by Westminster at {gbp(YEAR.incomeTax.personalAllowance)}, including its withdrawal above {gbp(100_000)}.</li>
+    <li><strong>Dividends and savings interest</strong> — UK rates, even for Scottish taxpayers.</li>
+    <li><strong>Student loans, capital gains and inheritance tax</strong> — all reserved.</li>
+  </ul>
+  <p>
+    That last one matters for company directors: a Scottish director pays Scottish rates on salary
+    but UK rates on dividends.
+    <a href="/sole-trader-vs-limited-company-calculator/">See how that changes the comparison</a>.
+  </p>
+
+  <h2>The two systems side by side</h2>
+  <div class="table-scroll">
+    <table>
+      <caption>Income tax only. National Insurance is the same everywhere.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Salary</th>
+          <th scope="col">Scotland</th>
+          <th scope="col">Rest of UK</th>
+          <th scope="col">Difference</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{gbp(row.salary)}</td>
+              <td>{gbp(row.scotland)}</td>
+              <td>{gbp(row.ruk)}</td>
+              <td>
+                {row.difference === 0
+                  ? 'Same'
+                  : `${row.difference > 0 ? '+' : '−'}${gbp(Math.abs(row.difference))}`}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Where the gap comes from</h2>
+  <p>
+    The 19% starter rate leaves lower earners marginally better off — but only by tens of pounds,
+    because the band is narrow.
+    {crossover && <> The position reverses at about <strong>{gbp(crossover)}</strong>.</>}
+  </p>
+  <p>
+    The decisive point is <strong>{gbp(43_662)}</strong>. Above it a Scottish taxpayer pays 42%
+    while someone elsewhere in the UK is still on 20% until {gbp(50_270)}. That 22 point gap across
+    a {gbp(50_270 - 43_662)} band accounts for most of the difference at middle incomes, and it
+    persists all the way up.
+  </p>
+  <p>
+    There is also a quirk between {gbp(43_662)} and {gbp(50_270)}: a Scottish taxpayer pays 42%
+    income tax but still 8% National Insurance, because the NI upper earnings limit is UK-wide. The
+    combined marginal rate is 50% — higher than in the band immediately above it, where NI drops to
+    2%.
+  </p>
+
+  <h2>The highest marginal rate in the UK</h2>
+  <p>
+    Between {gbp(100_000)} and {gbp(125_140)} the personal allowance is withdrawn at £1 per £2
+    earned. In Scotland that sits on top of the 45% advanced rate, giving an effective marginal rate
+    of <strong>67.5%</strong> — against 60% elsewhere.
+    <a href="/guides/the-100k-tax-trap/">How the trap works</a>.
+  </p>
+  <p>
+    The consolation is that pension relief comes at the same rate. A Scottish taxpayer in that band
+    gets 67.5% relief on a pension contribution, which is the most generous available anywhere in
+    the UK system.
+  </p>
+
+  <h2>Who counts as a Scottish taxpayer</h2>
+  <p>
+    Where you <strong>live</strong>, not where you work. If your main home is in Scotland for most
+    of the tax year you pay Scottish rates, even if your employer and workplace are in England. The
+    reverse is equally true.
+  </p>
+  <p>
+    HMRC applies an S prefix to your tax code based on the address they hold, which is why keeping
+    it current matters — a wrong address means a wrong tax code and a correction later. If you move
+    mid-year, the nation you lived in longest generally decides the whole year.
+  </p>
+
+  <h2>What changed for {YEAR.label}</h2>
+  <p>
+    The starter and basic rate band limits rose 7.4%, slightly reducing tax for lower earners. The
+    higher, advanced and top rate thresholds were frozen, so more Scottish taxpayers are pulled into
+    them each year as pay rises — the same fiscal drag operating across the rest of the UK, but from
+    a lower starting point.
+  </p>
+</GuideLayout>

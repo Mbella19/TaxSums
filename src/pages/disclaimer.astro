@@ -1,0 +1,116 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../config';
+import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+---
+
+<BaseLayout
+  title={`Disclaimer | ${SITE.name}`}
+  description="What our calculators can and cannot tell you, and when you should speak to a professional instead."
+  crumbs={[{ label: 'Disclaimer' }]}
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>Disclaimer</h1>
+      <p class="tool-standfirst">
+        What these calculators can tell you, what they cannot, and when to speak to somebody
+        qualified.
+      </p>
+    </div>
+
+    <div class="tool-body">
+      <div class="prose">
+        <h2>These are estimates</h2>
+        <p>
+          Our calculators produce estimates based on published rates for the {YEAR.label} tax year
+          and the information you enter. They are not a statement of your tax liability, and HMRC is
+          not bound by them.
+        </p>
+
+        <h2>This is not advice</h2>
+        <p>
+          Nothing on this site is financial, tax, legal or investment advice. We are not regulated by
+          the Financial Conduct Authority, we do not know your circumstances, and we cannot recommend
+          a course of action. We explain how the rules work and let you put your own numbers in.
+        </p>
+
+        <h2>Where a calculator will not match reality</h2>
+        <p>
+          Every tool lists its own limits, but some apply across the site:
+        </p>
+        <ul>
+          <li>
+            <strong>Annual calculation.</strong> We work in whole tax years. Payroll assesses National
+            Insurance in each pay period without truing up, so uneven pay produces different payslip
+            figures.
+          </li>
+          <li>
+            <strong>Standard tax codes.</strong> A K code, an emergency code, underpaid tax collected
+            through your code or a Marriage Allowance transfer will all change your figures.
+          </li>
+          <li>
+            <strong>Single income sources.</strong> Combinations of employment, self-employment,
+            rental, dividend and savings income interact in ways a single-purpose calculator cannot
+            capture.
+          </li>
+          <li>
+            <strong>No means-tested benefits.</strong> Universal Credit, Tax-Free Childcare and the
+            free hours all have their own thresholds that can matter more than the tax.
+          </li>
+          <li>
+            <strong>Edge cases.</strong> Reliefs, elections and anti-avoidance rules that apply to a
+            minority of situations are generally not modelled.
+          </li>
+        </ul>
+
+        <h2>Rates change</h2>
+        <p>
+          Tax rates change at every Budget and occasionally mid-year. We update promptly and record
+          every change on the <a href="/changelog/">changelog</a>, with a verification date on every
+          figure on the <a href="/rates/">rates page</a>. If you are reading this well after that
+          date, confirm the figures before relying on them.
+        </p>
+
+        <h2>When to get professional help</h2>
+        <p>Speak to a qualified accountant or adviser if you are:</p>
+        <ul>
+          <li>Deciding whether to incorporate, or how to extract profit from a company.</li>
+          <li>Selling a property with a substantial gain, or one with a complicated ownership history.</li>
+          <li>Negotiating a redundancy or settlement agreement.</li>
+          <li>Dealing with income from more than one country.</li>
+          <li>Making pension decisions near the annual allowance or the taper.</li>
+          <li>Anywhere the amounts are large enough that being wrong would hurt.</li>
+        </ul>
+        <p>
+          For settlement agreements you must take independent legal advice for the agreement to bind
+          you, and the employer normally pays for it.
+        </p>
+
+        <h2>Free sources of help</h2>
+        <ul>
+          <li>
+            <a href="https://www.gov.uk/government/organisations/hm-revenue-customs" rel="nofollow noopener" target="_blank">HMRC</a> — for tax queries about your own affairs.
+          </li>
+          <li>
+            <a href="https://www.moneyhelper.org.uk/" rel="nofollow noopener" target="_blank">MoneyHelper</a> — free, impartial guidance backed by government.
+          </li>
+          <li>
+            <a href="https://www.citizensadvice.org.uk/" rel="nofollow noopener" target="_blank">Citizens Advice</a> — free help with benefits, debt and employment.
+          </li>
+          <li>
+            <a href="https://www.acas.org.uk/" rel="nofollow noopener" target="_blank">Acas</a> — free advice on redundancy and employment rights.
+          </li>
+          <li>
+            <a href="https://www.litrg.org.uk/" rel="nofollow noopener" target="_blank">Low Incomes Tax Reform Group</a> — detailed guidance for people on lower incomes.
+          </li>
+        </ul>
+
+        <h2>Found an error?</h2>
+        <p>
+          Please <a href="/contact/">tell us</a>. Send the inputs you used and what you expected.
+          Corrections are fixed the same day and recorded on the changelog.
+        </p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

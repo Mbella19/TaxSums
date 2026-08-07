@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../config';
+---
+
+<BaseLayout
+  title={`Contact | ${SITE.name}`}
+  description="How to report an error in a calculator, suggest a tool, or get in touch."
+  crumbs={[{ label: 'Contact' }]}
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>Contact</h1>
+      <p class="tool-standfirst">
+        Corrections are the most useful thing you can send us. They get fixed the same day.
+      </p>
+    </div>
+
+    <div class="tool-body">
+      <div class="prose">
+        <h2>Email</h2>
+        <p>
+          <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>
+        </p>
+
+        <h2>Reporting an error</h2>
+        <p>
+          If a figure looks wrong, the fastest way to get it fixed is to send us:
+        </p>
+        <ul>
+          <li>The calculator, and ideally the URL — inputs are saved in the address bar, so copying it captures your exact figures.</li>
+          <li>The number we gave you.</li>
+          <li>The number you expected, and where it came from.</li>
+        </ul>
+        <p>
+          We check every report against the primary source. If we are wrong we fix it that day and
+          record it on the <a href="/changelog/">changelog</a>. If we are right, we will explain why
+          — often it turns out to be a genuine subtlety worth adding to the page.
+        </p>
+
+        <h2>Suggesting a calculator</h2>
+        <p>
+          Tell us what you were trying to work out and why the existing tools did not help. The most
+          useful suggestions describe a real situation rather than a feature.
+        </p>
+
+        <h2>What we cannot do</h2>
+        <p>
+          We cannot give tax advice or comment on your personal circumstances. We are not accountants
+          and are not regulated to advise. For your own affairs, speak to a qualified accountant, to
+          HMRC, or to one of the free services listed on our{' '}
+          <a href="/disclaimer/">disclaimer page</a>.
+        </p>
+
+        <h2>Using our content</h2>
+        <p>
+          Quoting our figures with a link back is welcome. If you write about UK tax and want to
+          reference a calculator, or think one would be useful to your readers, do get in touch.
+        </p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

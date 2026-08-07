@@ -1,0 +1,237 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import Faq from '../../components/Faq.astro';
+import TakeHomeCalculator from '../../components/calculators/TakeHomeCalculator';
+import { toolBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+
+const tool = toolBySlug('take-home-pay-calculator');
+const gbp = (n: number) => `£${n.toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
+---
+
+<ToolLayout tool={tool}>
+  <TakeHomeCalculator slot="calculator" client:load />
+
+  <Fragment slot="explanation">
+    <h2>How your take-home pay is worked out</h2>
+    <p>
+      Four things come out of a UK salary, and each one is calculated on a different figure. That
+      is why two people on the same salary with the same pension contribution can take home
+      different amounts.
+    </p>
+
+    <h3>1. Income tax</h3>
+    <p>
+      You pay nothing on the first {gbp(YEAR.incomeTax.personalAllowance)} — the personal
+      allowance. Above that, income is taxed in bands. In England, Wales and Northern Ireland
+      there are three; Scotland has six. Crucially, the bands apply to what is left
+      <em>after</em> the allowance, not to your whole salary.
+    </p>
+
+    <h3>2. National Insurance</h3>
+    <p>
+      Employee National Insurance is {pct(YEAR.nationalInsurance.employee.mainRate)} on earnings
+      between {gbp(YEAR.nationalInsurance.employee.primaryThreshold)} and{' '}
+      {gbp(YEAR.nationalInsurance.employee.upperEarningsLimit)}, then{' '}
+      {pct(YEAR.nationalInsurance.employee.upperRate)} above that. It drops to the lower rate at
+      the top rather than rising, which surprises people. NI is charged on your
+      <em>earnings</em>, so the personal allowance is irrelevant and benefits in kind are excluded.
+    </p>
+
+    <h3>3. Student loan</h3>
+    <p>
+      You repay a percentage of everything above your plan's threshold — nothing on the amount
+      below it. Each repayment is rounded down to whole pounds, which is why a small pay rise
+      sometimes changes nothing. A postgraduate loan is repaid <strong>alongside</strong> an
+      undergraduate plan, so someone on Plan 2 with a master's loan can lose 15% of the top slice
+      of their salary to loans alone.
+    </p>
+
+    <h3>4. Pension — and why the arrangement matters</h3>
+    <p>
+      This is where most salary calculators go wrong. There are three ways a workplace pension can
+      be run, and they do not produce the same take-home pay:
+    </p>
+    <ul>
+      <li>
+        <strong>Salary sacrifice.</strong> You formally give up salary, so it never counts as pay.
+        It escapes income tax <em>and</em> National Insurance. This is the only one that saves NI.
+      </li>
+      <li>
+        <strong>Net pay arrangement.</strong> Deducted from gross pay before income tax but after
+        NI is worked out. You get full tax relief immediately, at whatever rate you pay.
+      </li>
+      <li>
+        <strong>Relief at source.</strong> Taken from pay that has already been taxed. Your
+        provider claims back 20% from HMRC, so you only pay 80% of the contribution. If you are a
+        higher rate taxpayer you must claim the rest yourself through Self Assessment — it does
+        not happen automatically, and a great many people never claim it.
+      </li>
+    </ul>
+    <p>
+      On a {gbp(50000)} salary, a {gbp(5000)} contribution costs a salary-sacrifice member{' '}
+      {gbp(400)} less over the year than the same contribution under net pay, purely because of
+      the National Insurance saving.
+      <a href="/guides/salary-sacrifice-explained/">More on salary sacrifice</a>.
+    </p>
+
+    <h2>The £100,000 trap</h2>
+    <p>
+      Once your income passes {gbp(YEAR.incomeTax.taperThreshold)}, your personal allowance is
+      withdrawn at £1 for every £2 you earn. You are paying 40% on the extra income and losing
+      allowance that was previously untaxed, which produces an effective rate of <strong>60%</strong>{' '}
+      until the allowance runs out at {gbp(125140)}. In Scotland the advanced rate makes it 67.5%.
+    </p>
+    <p>
+      A pension contribution in that range gets relief at the same 60%, which is why it is the
+      single most effective place to put money in the UK tax system.
+      <a href="/guides/the-100k-tax-trap/">Read the full explanation</a>.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>{YEAR.label} rates used by this calculator</h2>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Income tax — England, Wales and Northern Ireland</caption>
+        <thead>
+          <tr>
+            <th scope="col">Band</th>
+            <th scope="col">Taxable income</th>
+            <th scope="col">Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Personal allowance</td>
+            <td>First {gbp(YEAR.incomeTax.personalAllowance)}</td>
+            <td>0%</td>
+          </tr>
+          {
+            YEAR.incomeTax.bands['england-nireland'].map((band, index, bands) => {
+              const from = index === 0 ? 0 : (bands[index - 1]!.upTo ?? 0);
+              return (
+                <tr>
+                  <td>{band.label}</td>
+                  <td>
+                    {gbp(from)}{band.upTo === null ? ' and above' : ` to ${gbp(band.upTo)}`}
+                  </td>
+                  <td>{pct(band.rate)}</td>
+                </tr>
+              );
+            })
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Student loan thresholds for {YEAR.label}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Plan</th>
+            <th scope="col">Threshold</th>
+            <th scope="col">Rate</th>
+            <th scope="col">Who it applies to</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            Object.values(YEAR.studentLoans).map((plan) => (
+              <tr>
+                <td>{plan.label}</td>
+                <td>{gbp(plan.threshold)}</td>
+                <td>{pct(plan.rate)}</td>
+                <td style="white-space:normal;text-align:left;max-width:26rem">
+                  {plan.description}
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>What this calculator does not do</h2>
+    <p>
+      Being clear about the edges is more useful than pretending there are none.
+    </p>
+    <ul>
+      <li>
+        <strong>It works annually.</strong> Real payroll assesses National Insurance in each pay
+        period and does not true it up across the year. If your pay is uneven — a big bonus month,
+        a mid-year job change, irregular overtime — your payslips will not add up to this figure,
+        even though your income tax will.
+      </li>
+      <li>
+        <strong>It assumes a standard tax code.</strong> If you have a K code, an emergency code,
+        underpaid tax being collected, or a Marriage Allowance transfer, your figures will differ.
+      </li>
+      <li>
+        <strong>It covers employment income only.</strong> Rental income, dividends, savings
+        interest and self-employed profit all change the picture and are not included.
+      </li>
+      <li>
+        <strong>It ignores the High Income Child Benefit Charge.</strong> If you claim Child
+        Benefit and earn over {gbp(YEAR.childBenefit.hicbcThreshold)}, some or all of it is clawed
+        back through your tax bill.
+      </li>
+      <li>
+        <strong>Salary sacrifice has limits.</strong> You cannot sacrifice below the National
+        Minimum Wage, and reducing your salary can affect mortgage applications, life cover and
+        statutory maternity pay.
+      </li>
+    </ul>
+
+    <div class="note">
+      <strong>Coming in April 2029</strong>
+      <p>
+        The Autumn Budget of November 2025 announced that National Insurance relief on
+        salary-sacrificed pension contributions will be capped at £2,000 a year from April 2029.
+        It does not affect {YEAR.label}, so this calculator does not apply it — but if you
+        sacrifice more than £2,000 a year, plan for it.
+      </p>
+    </div>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'Why is my payslip different from this figure?',
+        answer:
+          'Most often because National Insurance is worked out per pay period rather than annually. If your pay varies month to month you can pay more NI over the year than an annual calculation suggests. A non-standard tax code, a bonus month, or benefits in kind being taxed through your code will also move the number.',
+      },
+      {
+        question: 'Which student loan plan am I on?',
+        answer:
+          'Plan 1 for courses started before September 2012 in England or Wales, and for Scottish and Northern Irish students. Plan 2 for English and Welsh courses started between September 2012 and July 2023. Plan 4 if you were funded by SAAS in Scotland. Plan 5 for English courses started from August 2023. A postgraduate loan sits on top of whichever undergraduate plan applies.',
+      },
+      {
+        question: 'Does a pension contribution reduce my student loan repayment?',
+        answer:
+          'Only salary sacrifice does. Net pay and relief-at-source contributions do not reduce the earnings figure used for student loan deductions, so your repayment is unchanged.',
+      },
+      {
+        question: 'Do I pay National Insurance after State Pension age?',
+        answer:
+          'No. Employee National Insurance stops once you reach State Pension age, even if you carry on working. Income tax still applies. Your employer continues to pay their share.',
+      },
+      {
+        question: 'Is take-home pay different in Scotland?',
+        answer:
+          'Yes for income tax, which Scotland sets itself using six bands rather than three. National Insurance and student loans are the same UK-wide. Scottish taxpayers generally pay slightly less below about £30,000 and more above roughly £43,700.',
+      },
+      {
+        question: 'How much of my bonus will I actually keep?',
+        answer:
+          'A bonus is taxed at your marginal rate, which the calculator shows. If the bonus pushes you over £100,000 you can briefly face a 60% effective rate, and paying the bonus straight into a pension through salary sacrifice avoids both the income tax and the National Insurance on it.',
+      },
+    ]}
+  />
+</ToolLayout>

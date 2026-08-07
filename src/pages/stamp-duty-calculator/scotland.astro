@@ -1,0 +1,182 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import Faq from '../../components/Faq.astro';
+import StampDutyCalculator from '../../components/calculators/StampDutyCalculator';
+import { toolBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+import { calculatePropertyTax } from '../../lib/property-tax';
+
+const tool = toolBySlug('stamp-duty-calculator/scotland');
+const rules = YEAR.propertyTax.scotland;
+const ads = rules.additionalProperty as { kind: 'flat'; rate: number; minimumPrice: number };
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(0)}%`;
+
+const examples = [200000, 300000, 400000, 600000, 900000].map((price) => ({
+  price,
+  mover: calculatePropertyTax({ price, region: 'scotland' }, YEAR).total,
+  firstTime: calculatePropertyTax({ price, region: 'scotland', firstTimeBuyer: true }, YEAR).total,
+  additional: calculatePropertyTax({ price, region: 'scotland', additionalProperty: true }, YEAR)
+    .total,
+}));
+---
+
+<ToolLayout tool={tool}>
+  <StampDutyCalculator slot="calculator" region="scotland" client:load />
+
+  <Fragment slot="explanation">
+    <h2>LBTT is not stamp duty</h2>
+    <p>
+      Scotland replaced Stamp Duty Land Tax with Land and Buildings Transaction Tax in April 2015.
+      It is collected by Revenue Scotland rather than HMRC, and the bands, the second-home
+      supplement and the first-time buyer relief all work differently from the rest of the UK.
+      Using an England-shaped calculator on a Scottish purchase will give you the wrong number.
+    </p>
+    <p>
+      Like SDLT, LBTT is charged in slices. The nil-rate band runs to{' '}
+      {gbp(rules.standardBands[0]!.upTo!)}, lower than England's, and the 10% band starts at{' '}
+      {gbp(325000)} — much earlier than England's {gbp(925000)}. That makes Scotland noticeably
+      more expensive in the middle of the market.
+    </p>
+
+    <h3>The Additional Dwelling Supplement works differently</h3>
+    <p>
+      England adds 5 percentage points to each band. Scotland's ADS is a{' '}
+      <strong>flat {pct(ads.rate)} of the entire purchase price</strong>, charged alongside the
+      banded LBTT rather than folded into it. On a {gbp(300000)} second home that is{' '}
+      {gbp(300000 * ads.rate)} of ADS on top of {gbp(calculatePropertyTax({ price: 300000, region: 'scotland' }, YEAR).total)}{' '}
+      of LBTT.
+    </p>
+    <p>
+      It applies from {gbp(ads.minimumPrice)} and can be reclaimed if you sell your previous main
+      residence within 36 months.
+    </p>
+
+    <h3>First-time buyer relief has no upper limit</h3>
+    <p>
+      This is where Scotland is genuinely more generous. The relief raises the nil-rate band from{' '}
+      {gbp(145000)} to {gbp(rules.firstTimeBuyerRelief!.nilRateBand)}, and unlike England there is{' '}
+      <strong>no maximum property price</strong>. A first-time buyer purchasing at {gbp(600000)}
+      still gets it. The saving is capped at {gbp(600)} by the size of the band, but there is no
+      cliff edge to fall off.
+    </p>
+
+    <h3>No non-resident surcharge</h3>
+    <p>
+      Scotland has not introduced the 2% surcharge for overseas buyers that applies in England and
+      Northern Ireland.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>LBTT rates for {YEAR.label}</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>Residential rates — Revenue Scotland</caption>
+        <thead>
+          <tr>
+            <th scope="col">Portion of the price</th>
+            <th scope="col">Standard</th>
+            <th scope="col">First-time buyer</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            rules.standardBands.map((band, index, bands) => {
+              const from = index === 0 ? 0 : (bands[index - 1]!.upTo ?? 0);
+              const ftb = rules.firstTimeBuyerRelief!.bands.find(
+                (b) => (b.upTo ?? Infinity) >= (band.upTo ?? Infinity),
+              );
+              return (
+                <tr>
+                  <td>
+                    {gbp(from)}{band.upTo === null ? ' and above' : ` to ${gbp(band.upTo)}`}
+                  </td>
+                  <td>{pct(band.rate)}</td>
+                  <td>{pct(ftb?.rate ?? band.rate)}</td>
+                </tr>
+              );
+            })
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>What you would pay at common Scottish prices</caption>
+        <thead>
+          <tr>
+            <th scope="col">Price</th>
+            <th scope="col">Moving home</th>
+            <th scope="col">First-time buyer</th>
+            <th scope="col">Second home (with ADS)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            examples.map((row) => (
+              <tr>
+                <td>{gbp(row.price)}</td>
+                <td>{gbp(row.mover)}</td>
+                <td>{gbp(row.firstTime)}</td>
+                <td>{gbp(row.additional)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>What this calculator does not cover</h2>
+    <ul>
+      <li>
+        <strong>Non-residential and mixed-use property</strong>, which has its own lower band table.
+      </li>
+      <li>
+        <strong>Lease transactions</strong>, where LBTT can also apply to the net present value of
+        the rent, with three-yearly review returns.
+      </li>
+      <li>
+        <strong>Multiple dwellings relief</strong> and other reliefs that need to be claimed on the
+        return.
+      </li>
+    </ul>
+    <p>
+      An LBTT return must be made and the tax paid within 30 days of the effective date, normally
+      completion. Your solicitor usually handles it.
+    </p>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'Is LBTT more expensive than stamp duty in England?',
+        answer:
+          'Generally yes above about £325,000, because Scotland reaches its 10% band far earlier — at £325,000 rather than £925,000. Below roughly £175,000 Scotland is usually cheaper. The calculator shows both figures side by side.',
+      },
+      {
+        question: 'How much is the Additional Dwelling Supplement?',
+        answer: `${(ads.rate * 100).toFixed(0)}% of the entire purchase price, not just the portion above a threshold, and it is charged in addition to the normal banded LBTT. It applies to purchases of £${ads.minimumPrice.toLocaleString('en-GB')} or more where you already own another dwelling anywhere in the world.`,
+      },
+      {
+        question: 'Can I get ADS back if I sell my old home?',
+        answer:
+          'Yes, if you sell your previous main residence within 36 months of the new purchase. You claim it back from Revenue Scotland by amending the original return. The window used to be 18 months, so older guidance may mislead you.',
+      },
+      {
+        question: 'Is there a price limit on Scottish first-time buyer relief?',
+        answer:
+          'No. Unlike England, where the relief vanishes above £500,000, Scotland applies it at any price. The saving is capped at £600 because it only raises the nil-rate band from £145,000 to £175,000, but there is no cliff edge.',
+      },
+      {
+        question: 'Do overseas buyers pay extra in Scotland?',
+        answer:
+          'No. Scotland has no equivalent of the 2% non-resident surcharge that applies in England and Northern Ireland.',
+      },
+    ]}
+  />
+</ToolLayout>

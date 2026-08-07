@@ -1,0 +1,208 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import Faq from '../../components/Faq.astro';
+import StampDutyCalculator from '../../components/calculators/StampDutyCalculator';
+import { toolBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+import { calculatePropertyTax, firstTimeBuyerCliff } from '../../lib/property-tax';
+
+const tool = toolBySlug('stamp-duty-calculator');
+const rules = YEAR.propertyTax['england-nireland'];
+const cliff = firstTimeBuyerCliff('england-nireland', YEAR)!;
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(0)}%`;
+
+const examples = [250000, 350000, 500000, 750000, 1000000].map((price) => ({
+  price,
+  mover: calculatePropertyTax({ price, region: 'england-nireland' }, YEAR).total,
+  firstTime: calculatePropertyTax(
+    { price, region: 'england-nireland', firstTimeBuyer: true },
+    YEAR,
+  ).total,
+  additional: calculatePropertyTax(
+    { price, region: 'england-nireland', additionalProperty: true },
+    YEAR,
+  ).total,
+}));
+---
+
+<ToolLayout tool={tool}>
+  <StampDutyCalculator slot="calculator" region="england-nireland" client:load />
+
+  <Fragment slot="explanation">
+    <h2>How stamp duty works</h2>
+    <p>
+      Stamp Duty Land Tax applies in England and Northern Ireland. Scotland and Wales have their
+      own taxes with different bands, so if you are buying there use the
+      <a href="/stamp-duty-calculator/scotland/">LBTT calculator</a> or the
+      <a href="/stamp-duty-calculator/wales/">LTT calculator</a> instead.
+    </p>
+    <p>
+      SDLT is charged in slices, not all at one rate. On a {gbp(300000)} purchase you pay nothing
+      on the first {gbp(125000)}, 2% on the next {gbp(125000)}, and 5% on the remaining{' '}
+      {gbp(50000)} — a total of {gbp(5000)}, not 5% of the whole price. Every band table on this
+      page works the same way.
+    </p>
+
+    <h3>The 5% additional property surcharge</h3>
+    <p>
+      If you already own a residential property anywhere in the world and are not replacing your
+      main home on the same day, 5 percentage points are added to <em>every</em> band, including
+      the nil-rate one. In practice that means the standard bill plus 5% of the whole purchase
+      price. It does not apply below {gbp(40000)}.
+    </p>
+    <p>
+      If you buy before selling your old home you pay the surcharge, but you can reclaim it if you
+      sell the previous main residence within three years.
+    </p>
+
+    <h3>First-time buyer relief and its cliff edge</h3>
+    <p>
+      First-time buyers pay nothing up to {gbp(rules.firstTimeBuyerRelief!.nilRateBand)} and 5%
+      between there and {gbp(cliff.limit)}. Above {gbp(cliff.limit)} the relief does not taper —
+      it disappears completely.
+    </p>
+    <div class="danger">
+      <strong>One pound over {gbp(cliff.limit)} costs {gbp(cliff.jump)}</strong>
+      <p>
+        At exactly {gbp(cliff.limit)} a first-time buyer pays {gbp(cliff.taxAtLimit)}. At{' '}
+        {gbp(cliff.limit + 1)} they pay {gbp(cliff.taxJustAbove)}, because the standard rates apply
+        to the whole price. If you are negotiating near this figure, the price matters far more
+        than it looks. <a href="/guides/first-time-buyer-stamp-duty-cliff-edge/">Full explanation</a>.
+      </p>
+    </div>
+
+    <h3>Non-UK residents</h3>
+    <p>
+      Buyers who have not spent at least 183 days in the UK in the 12 months before the purchase
+      pay a further 2 percentage points on top of everything else. It can be reclaimed if you
+      later meet the residence test.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>SDLT rates for {YEAR.label}</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>Residential rates — England and Northern Ireland</caption>
+        <thead>
+          <tr>
+            <th scope="col">Portion of the price</th>
+            <th scope="col">Standard</th>
+            <th scope="col">Additional property</th>
+            <th scope="col">Non-resident</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            rules.standardBands.map((band, index, bands) => {
+              const from = index === 0 ? 0 : (bands[index - 1]!.upTo ?? 0);
+              return (
+                <tr>
+                  <td>
+                    {gbp(from)}{band.upTo === null ? ' and above' : ` to ${gbp(band.upTo)}`}
+                  </td>
+                  <td>{pct(band.rate)}</td>
+                  <td>{pct(band.rate + 0.05)}</td>
+                  <td>{pct(band.rate + 0.02)}</td>
+                </tr>
+              );
+            })
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>What you would pay at common prices</caption>
+        <thead>
+          <tr>
+            <th scope="col">Price</th>
+            <th scope="col">Moving home</th>
+            <th scope="col">First-time buyer</th>
+            <th scope="col">Second home</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            examples.map((row) => (
+              <tr>
+                <td>{gbp(row.price)}</td>
+                <td>{gbp(row.mover)}</td>
+                <td>{row.price > cliff.limit ? `${gbp(row.firstTime)} (no relief)` : gbp(row.firstTime)}</td>
+                <td>{gbp(row.additional)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>What this calculator does not cover</h2>
+    <ul>
+      <li>
+        <strong>Mixed-use and non-residential property.</strong> Buildings that are part commercial
+        use a separate, lower rate table.
+      </li>
+      <li>
+        <strong>Multiple dwellings and bulk purchases.</strong> Buying six or more dwellings in one
+        transaction lets you use the non-residential rates.
+      </li>
+      <li>
+        <strong>Shared ownership.</strong> You can pay on the share bought or elect to pay on the
+        full market value up front. Which is better depends on whether you plan to staircase.
+      </li>
+      <li>
+        <strong>Leasehold with significant rent.</strong> An additional charge can apply to the net
+        present value of the rent on a new lease.
+      </li>
+      <li>
+        <strong>Company purchases.</strong> Companies buying residential property over £500,000 can
+        face a 17% flat rate under the ATED regime.
+      </li>
+    </ul>
+    <p>
+      SDLT must be reported and paid within 14 days of completion. Your solicitor normally handles
+      this, but the legal responsibility is yours.
+    </p>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'Do I pay the 5% surcharge if I am replacing my main home?',
+        answer:
+          'Not if you sell your previous main residence on or before the day you complete on the new one. If the sale is delayed you must pay the surcharge up front, then reclaim it once the old home sells — provided that happens within three years.',
+      },
+      {
+        question: 'Am I still a first-time buyer if I inherited a property?',
+        answer:
+          'No. First-time buyer relief requires that you have never owned a dwelling anywhere in the world, and an inherited share counts as ownership. The same applies if you were named on a property in a divorce settlement or bought one abroad.',
+      },
+      {
+        question: 'If I buy with a partner, do we both need to be first-time buyers?',
+        answer:
+          'Yes. Every buyer named on the purchase must be a first-time buyer. If one of you has owned before, the relief is lost for the whole transaction — and the additional property surcharge may apply too if they still own it.',
+      },
+      {
+        question: 'Why does a £1 price increase cost £5,000?',
+        answer:
+          'Because first-time buyer relief is withdrawn entirely above £500,000 rather than tapering. At £500,000 you pay £10,000. At £500,001 the standard rates apply to the whole price, giving £15,000. It is worth structuring an offer to stay at or below the limit.',
+      },
+      {
+        question: 'When do I have to pay?',
+        answer:
+          'Within 14 days of completion. Your conveyancer usually files the return and pays from the completion funds, so you need the money available on the day rather than afterwards.',
+      },
+      {
+        question: 'Can I add stamp duty to my mortgage?',
+        answer:
+          'Not directly — lenders advance against the property value, not the tax. You can sometimes borrow slightly more against the property and use the surplus, but only if the loan-to-value and affordability still work. In practice stamp duty needs to come from savings.',
+      },
+    ]}
+  />
+</ToolLayout>

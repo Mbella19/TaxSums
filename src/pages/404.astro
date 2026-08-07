@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { CATEGORIES, TOOLS, toolsInCategory } from '../data/site';
+---
+
+<BaseLayout
+  title="Page not found | TaxSums"
+  description="That page does not exist. Here are all our UK tax calculators."
+  noindex
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>That page does not exist</h1>
+      <p class="tool-standfirst">
+        The link may be out of date, or the address may have a typo. Every calculator on the site is
+        listed below.
+      </p>
+    </div>
+
+    {
+      CATEGORIES.map((category) => (
+        <section>
+          <h2>
+            <a href={`/${category.slug}/`} style="text-decoration:none">{category.title}</a>
+          </h2>
+          <ul class="card-grid">
+            {toolsInCategory(category.slug).map((tool) => (
+              <li>
+                <a class="card" href={`/${tool.slug}/`}>
+                  <strong>{tool.h1}</strong>
+                  <span>{tool.standfirst}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+
+    <section class="prose">
+      <p>
+        Still stuck? <a href="/">Start from the homepage</a>, browse the{' '}
+        <a href="/guides/">guides</a>, or <a href="/contact/">tell us about the broken link</a> —
+        {TOOLS.length} calculators and we would rather none of them were unreachable.
+      </p>
+    </section>
+  </div>
+</BaseLayout>

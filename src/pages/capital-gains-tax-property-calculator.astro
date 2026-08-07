@@ -1,0 +1,200 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Faq from '../components/Faq.astro';
+import CgtPropertyCalculator from '../components/calculators/CgtPropertyCalculator';
+import { toolBySlug } from '../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+
+const tool = toolBySlug('capital-gains-tax-property-calculator');
+const cgt = YEAR.capitalGains;
+const gbp = (n: number) => `£${n.toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(0)}%`;
+---
+
+<ToolLayout tool={tool}>
+  <CgtPropertyCalculator slot="calculator" client:load />
+
+  <Fragment slot="explanation">
+    <h2>When property gains are taxed</h2>
+    <p>
+      Selling your only or main home is normally free of Capital Gains Tax, thanks to Private
+      Residence Relief. CGT arrives when you sell something that has not been your main home
+      throughout: a buy-to-let, a second home, an inherited property, or a former home you moved out
+      of and let.
+    </p>
+
+    <h3>Residential property has its own rates</h3>
+    <p>
+      Gains on residential property are taxed at {pct(cgt.residentialBasicRate)} and{' '}
+      {pct(cgt.residentialHigherRate)} — different from the rates on shares and other assets. Which
+      applies depends on your income.
+    </p>
+
+    <h3>The gain sits on top of your income</h3>
+    <p>
+      This is the part most calculators get wrong. Your gain is added to your income to decide the
+      rate. If part of the gain fits in what is left of your basic rate band it is taxed at{' '}
+      {pct(cgt.residentialBasicRate)}; everything above is taxed at{' '}
+      {pct(cgt.residentialHigherRate)}. A single large gain is therefore routinely taxed at both
+      rates, and applying one rate to the whole gain gives the wrong answer for most people.
+    </p>
+
+    <h3>The annual exempt amount has collapsed</h3>
+    <p>
+      Each person can make {gbp(cgt.annualExemptAmount)} of gains a year tax free. It was{' '}
+      {gbp(12300)} as recently as 2022/23, so a great many disposals that used to fall outside CGT
+      now sit inside it. Jointly owned property gets one exemption per owner, which is why
+      transferring a share to a spouse before selling can be worth several thousand pounds —
+      transfers between spouses are themselves free of CGT.
+    </p>
+
+    <h3>Private Residence Relief and the final nine months</h3>
+    <p>
+      If a property was your main home for part of the time you owned it, the gain is
+      time-apportioned. The <strong>final nine months always qualify</strong>, even if you had
+      already moved out — which stops people being taxed simply because a sale took a while.
+    </p>
+
+    <h3>60 days to report and pay</h3>
+    <p>
+      A UK residential property gain must be reported to HMRC and the tax paid within{' '}
+      <strong>{cgt.propertyReportingDays} days of completion</strong>, through a Capital Gains Tax
+      on UK property account. This is separate from your Self Assessment return, and penalties start
+      as soon as the deadline passes. It catches out people who assume they can deal with it at the
+      year end.
+    </p>
+  </Fragment>
+
+  <Fragment slot="reference">
+    <h2>{YEAR.label} Capital Gains Tax figures</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>Rates and allowances</caption>
+        <tbody>
+          <tr><td>Annual exempt amount</td><td>{gbp(cgt.annualExemptAmount)} per person</td></tr>
+          <tr><td>Residential property, basic rate band</td><td>{pct(cgt.residentialBasicRate)}</td></tr>
+          <tr><td>Residential property, above basic rate</td><td>{pct(cgt.residentialHigherRate)}</td></tr>
+          <tr><td>Reporting and payment deadline</td><td>{cgt.propertyReportingDays} days from completion</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>What you can and cannot deduct from the gain</caption>
+        <thead>
+          <tr>
+            <th scope="col">Deductible</th>
+            <th scope="col">Not deductible</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="white-space:normal;text-align:left">Purchase price</td>
+            <td style="white-space:normal;text-align:left">Mortgage interest</td>
+          </tr>
+          <tr>
+            <td style="white-space:normal;text-align:left">Stamp duty paid on purchase</td>
+            <td style="white-space:normal;text-align:left">Repairs and maintenance</td>
+          </tr>
+          <tr>
+            <td style="white-space:normal;text-align:left">Legal and survey fees, both ends</td>
+            <td style="white-space:normal;text-align:left">Redecoration</td>
+          </tr>
+          <tr>
+            <td style="white-space:normal;text-align:left">Estate agent fees on sale</td>
+            <td style="white-space:normal;text-align:left">Replacing like with like</td>
+          </tr>
+          <tr>
+            <td style="white-space:normal;text-align:left">Extensions and structural improvements</td>
+            <td style="white-space:normal;text-align:left">Insurance and letting agent fees</td>
+          </tr>
+          <tr>
+            <td style="white-space:normal;text-align:left">New kitchen or bathroom where it is an improvement</td>
+            <td style="white-space:normal;text-align:left">Anything already claimed against rental income</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </Fragment>
+
+  <Fragment slot="limits">
+    <h2>Limits and things worth checking</h2>
+    <ul>
+      <li>
+        <strong>Lettings relief is not modelled.</strong> Since April 2020 it only applies where you
+        shared occupancy with the tenant, which is rare. If that describes you, it can be worth up
+        to {gbp(40000)} and you should take advice.
+      </li>
+      <li>
+        <strong>Inherited property uses probate value.</strong> Your acquisition cost is the market
+        value at the date of death, not what the deceased paid.
+      </li>
+      <li>
+        <strong>Property held in a company is different.</strong> Companies pay corporation tax on
+        gains, not CGT, with no annual exempt amount.
+      </li>
+      <li>
+        <strong>Non-residents</strong> have been within scope for UK property gains since April
+        2015, with their own rebasing rules.
+      </li>
+      <li>
+        <strong>Losses.</strong> Capital losses on other assets can be set against the gain, and
+        unused losses carried forward. Not included here.
+      </li>
+      <li>
+        <strong>Joint ownership is assumed equal.</strong> Unequal shares, or a change of shares
+        before sale, need separate treatment.
+      </li>
+      <li>
+        <strong>Property income rates rise in April 2027.</strong> That change affects rental
+        profit, not capital gains, but it is worth factoring into any decision about whether to keep
+        letting or sell.
+      </li>
+    </ul>
+    <p class="warning">
+      Capital Gains Tax on property has more edge cases than any other calculation on this site.
+      Treat this as an estimate to plan with, and get an accountant to confirm the figure before you
+      file.
+    </p>
+  </Fragment>
+
+  <Faq
+    slot="faq"
+    items={[
+      {
+        question: 'Do I pay Capital Gains Tax when I sell my house?',
+        answer:
+          'Not if it has been your only or main home for the whole time you owned it — Private Residence Relief covers the gain entirely. CGT applies to second homes, buy-to-lets, inherited property and former homes you moved out of and let.',
+      },
+      {
+        question: 'What are the CGT rates on property in 2026/27?',
+        answer: `${pct(cgt.residentialBasicRate)} on the part of the gain that fits in your remaining basic rate band, and ${pct(cgt.residentialHigherRate)} above it. The gain is added to your income to decide which applies, so a large gain is usually taxed partly at each rate.`,
+      },
+      {
+        question: 'How long do I have to pay?',
+        answer: `${cgt.propertyReportingDays} days from completion. You report through a Capital Gains Tax on UK property account and pay at the same time. It is separate from Self Assessment, and late penalties begin immediately.`,
+      },
+      {
+        question: 'Can I reduce the tax by transferring a share to my spouse?',
+        answer:
+          'Often yes. Transfers between spouses and civil partners are free of CGT, and each person then has their own £3,000 exemption and their own basic rate band. If one of you is a basic rate taxpayer this can save a substantial amount. The transfer must be genuine and completed before the sale.',
+      },
+      {
+        question: 'What is the final nine months rule?',
+        answer:
+          'The last nine months of ownership always qualify for Private Residence Relief if the property was your main home at some point, even if you had already moved out. It prevents people being taxed just because a sale took time to complete.',
+      },
+      {
+        question: 'Can I deduct the new kitchen I fitted?',
+        answer:
+          'Only if it was a genuine improvement rather than a replacement. Upgrading a basic kitchen to a substantially better one can count; replacing a worn kitchen with a similar one is a repair and is not deductible. Keep invoices either way — HMRC will want evidence.',
+      },
+      {
+        question: 'Does the mortgage affect my gain?',
+        answer:
+          'No. Capital Gains Tax is calculated on the difference between what you sold for and what you paid, plus allowable costs. How the purchase was financed is irrelevant, and mortgage interest is never deductible against a capital gain.',
+      },
+    ]}
+  />
+</ToolLayout>

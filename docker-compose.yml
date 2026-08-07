@@ -1,0 +1,22 @@
+# Run the whole site with:  docker compose up -d --build
+#
+# Caddy handles Let's Encrypt automatically, so ports 80 and 443 must both be
+# reachable from the internet for the certificate challenge to succeed.
+
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp' # HTTP/3
+    volumes:
+      # Persist certificates so a rebuild does not re-request them and risk
+      # hitting Let's Encrypt rate limits.
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

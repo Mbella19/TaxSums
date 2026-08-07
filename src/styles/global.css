@@ -1,0 +1,792 @@
+/*
+ * Design tokens and base styles.
+ *
+ * Deliberately no web fonts: a finance calculator is read, not admired, and a
+ * font round-trip is the easiest 200ms to give back. The system stack renders
+ * instantly and looks native on every platform.
+ *
+ * Every figure on the site uses tabular numerals so columns of money line up.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Ink and paper. Warm off-white rather than pure white — easier on the eye
+     for long tables, and it stops the page glaring next to an ad unit. */
+  --paper: #fbfaf7;
+  --paper-raised: #ffffff;
+  --paper-sunken: #f3f1ec;
+  --ink: #14181f;
+  --ink-muted: #5a616e;
+  /* 4.6:1 on --paper, 4.8:1 on white. The lightest grey that still clears
+     WCAG AA for the small-caps labels and hints it is used on. */
+  --ink-faint: #6b7280;
+  --rule: #e2ded5;
+  --rule-strong: #cfcabe;
+
+  /* One accent, used sparingly: results, links, the current nav item. */
+  --accent: #14532d;
+  --accent-bright: #1d7a44;
+  --accent-wash: #e8f2ec;
+
+  /* Semantic colours for tax outcomes. */
+  --warn: #8a5a00;
+  --warn-wash: #fdf4e3;
+  --danger: #9b2c2c;
+  --danger-wash: #fdeeee;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  --measure: 68ch;
+  --page-max: 78rem;
+  --radius: 6px;
+  --shadow-sm: 0 1px 2px rgb(20 24 31 / 0.06), 0 1px 3px rgb(20 24 31 / 0.04);
+  --shadow-md: 0 2px 8px rgb(20 24 31 / 0.07), 0 8px 24px rgb(20 24 31 / 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #10131a;
+    --paper-raised: #171b24;
+    --paper-sunken: #0c0f15;
+    --ink: #e8eaee;
+    --ink-muted: #a2aab8;
+    /* 5.1:1 on --paper-raised. */
+    --ink-faint: #848c9a;
+    --rule: #262c38;
+    --rule-strong: #38404f;
+
+    --accent: #6ee7a0;
+    --accent-bright: #8df0b8;
+    --accent-wash: #12261a;
+
+    --warn: #e8b356;
+    --warn-wash: #2a2213;
+    --danger: #f08a8a;
+    --danger-wash: #2b1717;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 2px 8px rgb(0 0 0 / 0.45), 0 8px 24px rgb(0 0 0 / 0.35);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Money, percentages, dates — anything that sits in a column. */
+.num,
+td.num,
+th.num,
+table td,
+table th {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.2;
+  letter-spacing: -0.021em;
+  text-wrap: balance;
+  margin: 0 0 0.5em;
+  font-weight: 640;
+}
+
+h1 {
+  font-size: clamp(1.85rem, 1.35rem + 2.1vw, 2.7rem);
+  letter-spacing: -0.028em;
+}
+h2 {
+  font-size: clamp(1.4rem, 1.2rem + 0.85vw, 1.8rem);
+  margin-top: 2.4em;
+}
+h3 {
+  font-size: 1.16rem;
+  margin-top: 1.9em;
+}
+
+p,
+ul,
+ol {
+  margin: 0 0 1.1em;
+}
+p,
+li {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+a:hover {
+  color: var(--accent-bright);
+}
+
+:where(a, button, input, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--paper-sunken);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+/* ---------- Layout ---------- */
+
+.wrap {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 2rem);
+}
+
+/*
+ * The page body must never scroll sideways. Wide content — tables, long
+ * figures — scrolls inside its own container instead. This is the backstop; the
+ * individual min-width rules below are the actual fixes.
+ */
+body {
+  overflow-x: hidden;
+}
+
+.prose {
+  max-width: var(--measure);
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.7rem 1.1rem;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 0.5rem;
+  top: 0.5rem;
+}
+
+/* ---------- Header ---------- */
+
+.site-header {
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper-raised);
+}
+.site-header .wrap {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding-block: 0.85rem;
+}
+.brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.brand span {
+  color: var(--accent);
+}
+.site-nav {
+  display: flex;
+  gap: 1.35rem;
+  flex-wrap: wrap;
+  font-size: 0.94rem;
+  margin-left: auto;
+}
+.site-nav a {
+  color: var(--ink-muted);
+  text-decoration: none;
+  font-weight: 500;
+}
+.site-nav a:hover,
+.site-nav a[aria-current='page'] {
+  color: var(--accent);
+}
+
+/* ---------- Breadcrumbs ---------- */
+
+.breadcrumbs {
+  font-size: 0.86rem;
+  color: var(--ink-faint);
+  padding-block: 1rem 0;
+}
+.breadcrumbs ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.breadcrumbs li:not(:last-child)::after {
+  content: '/';
+  margin-left: 0.4rem;
+  color: var(--rule-strong);
+}
+.breadcrumbs a {
+  color: var(--ink-muted);
+  text-decoration: none;
+}
+.breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Tool page shell ---------- */
+
+.tool-header {
+  padding-block: 1.2rem 1.6rem;
+  max-width: var(--measure);
+}
+.tool-standfirst {
+  font-size: 1.16rem;
+  color: var(--ink-muted);
+  margin-bottom: 0.9rem;
+}
+
+/*
+ * A pill radius only reads correctly on a single line. This wraps to three
+ * lines on a narrow phone, so use a modest radius that survives wrapping.
+ */
+.verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: var(--ink-muted);
+  background: var(--paper-sunken);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.8rem;
+}
+.verified strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.tool-body {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: start;
+  padding-bottom: 4rem;
+}
+
+/*
+ * Grid and flex children default to `min-width: auto`, which means they refuse
+ * to shrink below their content's intrinsic width. A number input carries a
+ * sizeable intrinsic width, and without this it propagates all the way up and
+ * forces the whole page to scroll sideways on a narrow phone.
+ */
+.tool-body > * {
+  min-width: 0;
+}
+@media (min-width: 62rem) {
+  .tool-body {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .tool-aside {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+/* ---------- Calculator ---------- */
+
+.calc {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.calc-inputs {
+  display: grid;
+  gap: 1.05rem 1.25rem;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+}
+.calc-inputs > * {
+  min-width: 0;
+}
+@media (min-width: 34rem) {
+  .calc-inputs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .calc-inputs .span-2 {
+    grid-column: 1 / -1;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.field label,
+.fieldset-label {
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.field .hint {
+  font-size: 0.79rem;
+  color: var(--ink-faint);
+  line-height: 1.45;
+}
+
+.field input[type='number'],
+.field input[type='text'],
+.field select {
+  width: 100%;
+  /* Overrides the intrinsic width an input carries by default. */
+  min-width: 0;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  /* 44px is the minimum comfortable touch target. */
+  min-height: 44px;
+}
+.field input:focus,
+.field select:focus {
+  border-color: var(--accent-bright);
+}
+
+/* Strip spinners — they encourage clicking rather than typing a salary. */
+.field input[type='number']::-webkit-outer-spin-button,
+.field input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.field input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.prefixed {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  overflow: hidden;
+}
+.prefixed input {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.prefixed:focus-within {
+  border-color: var(--accent-bright);
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 1px;
+}
+.prefixed span {
+  display: grid;
+  place-items: center;
+  padding-inline: 0.7rem;
+  background: var(--paper-sunken);
+  border-right: 1px solid var(--rule);
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+.prefixed input {
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+/*
+ * The label is the tap target, not the radio inside it — clicking anywhere on
+ * the chip selects the option. 44px keeps it comfortable on a phone.
+ */
+.choices label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 0.42rem 0.7rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  background: var(--paper);
+  min-height: 44px;
+}
+.choices label:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-weight: 600;
+}
+.choices input {
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+/* ---------- Results ---------- */
+
+.calc-result {
+  border-top: 1px solid var(--rule);
+  background: var(--paper-sunken);
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+}
+.headline-figure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.1rem;
+  margin-bottom: 1.1rem;
+}
+.headline-figure .amount {
+  font-size: clamp(2rem, 1.4rem + 2.6vw, 3rem);
+  font-weight: 680;
+  letter-spacing: -0.033em;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.headline-figure .caption {
+  font-size: 0.94rem;
+  color: var(--ink-muted);
+}
+
+.figure-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1.2rem;
+}
+.figure-row div {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.85rem;
+}
+.figure-row dt,
+.figure-row .label {
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+.figure-row dd,
+.figure-row .value {
+  margin: 0;
+  font-size: 1.22rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Tables ---------- */
+
+.table-scroll {
+  overflow-x: auto;
+  margin-bottom: 1.3rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+caption {
+  text-align: left;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.84rem;
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--rule);
+}
+th,
+td {
+  padding: 0.6rem 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+thead th {
+  font-size: 0.77rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+  font-weight: 650;
+  background: var(--paper-sunken);
+}
+td:not(:first-child),
+th:not(:first-child) {
+  text-align: right;
+}
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+tfoot td {
+  font-weight: 660;
+  background: var(--paper-sunken);
+  border-top: 2px solid var(--rule-strong);
+}
+
+/* ---------- Callouts ---------- */
+
+.note,
+.warning,
+.danger {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-wash);
+  padding: 0.85rem 1.05rem;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin-bottom: 1.2rem;
+  font-size: 0.95rem;
+}
+.note > :last-child,
+.warning > :last-child,
+.danger > :last-child {
+  margin-bottom: 0;
+}
+.warning {
+  border-left-color: var(--warn);
+  background: var(--warn-wash);
+}
+.danger {
+  border-left-color: var(--danger);
+  background: var(--danger-wash);
+}
+.note strong:first-child,
+.warning strong:first-child,
+.danger strong:first-child {
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+/* ---------- FAQ ---------- */
+
+.faq details {
+  border-bottom: 1px solid var(--rule);
+  padding: 0.15rem 0;
+}
+.faq summary {
+  cursor: pointer;
+  padding: 0.85rem 0;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary::after {
+  content: '+';
+  color: var(--ink-faint);
+  font-weight: 400;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.faq details[open] summary::after {
+  content: '\2212';
+}
+.faq details > :not(summary) {
+  padding-bottom: 0.4rem;
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
+/* ---------- Related links ---------- */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.85rem;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  list-style: none;
+}
+.card {
+  display: block;
+  padding: 0.95rem 1.05rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  text-decoration: none;
+  color: var(--ink);
+  height: 100%;
+}
+.card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+}
+.card strong {
+  display: block;
+  color: var(--accent);
+  margin-bottom: 0.2rem;
+  font-size: 0.98rem;
+}
+.card span {
+  font-size: 0.87rem;
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+
+/* ---------- Ad slots ---------- */
+
+/*
+ * Reserved space, always. The container holds its height whether or not an ad
+ * is ever served, so turning AdSense on later cannot move the page.
+ */
+.ad-slot {
+  display: grid;
+  place-items: center;
+  margin: 1.75rem 0;
+  background: var(--paper-sunken);
+  border: 1px dashed var(--rule-strong);
+  border-radius: var(--radius);
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  overflow: hidden;
+}
+.ad-slot[data-format='leaderboard'] {
+  min-height: 100px;
+}
+.ad-slot[data-format='rectangle'] {
+  min-height: 280px;
+}
+.ad-slot[data-format='sidebar'] {
+  min-height: 600px;
+}
+@media (max-width: 48rem) {
+  .ad-slot[data-format='sidebar'] {
+    min-height: 280px;
+  }
+}
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  border-top: 1px solid var(--rule);
+  background: var(--paper-raised);
+  padding-block: 2.5rem 3rem;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  margin-top: auto;
+}
+.footer-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1.75rem;
+  margin-bottom: 2rem;
+}
+.footer-cols h2 {
+  font-size: 0.77rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  margin: 0 0 0.6rem;
+}
+.footer-cols ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.38rem;
+}
+.footer-cols a {
+  color: var(--ink-muted);
+  text-decoration: none;
+}
+.footer-cols a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.footer-legal {
+  border-top: 1px solid var(--rule);
+  padding-top: 1.5rem;
+  font-size: 0.83rem;
+  max-width: var(--measure);
+}
+
+/* Long pages of tables and FAQs: skip offscreen layout work. */
+.deferred {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+main {
+  flex: 1;
+}

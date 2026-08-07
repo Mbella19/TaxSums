@@ -1,0 +1,218 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+import { guideBySlug } from '../../data/site';
+import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
+
+const guide = guideBySlug('income-tax-rates-2026-27');
+const gbp = (n: number) => `£${n.toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
+
+const bandRows = (bands: readonly { upTo: number | null; rate: number; label: string }[]) =>
+  bands.map((band, index) => {
+    const from = index === 0 ? 0 : (bands[index - 1]!.upTo ?? 0);
+    return {
+      label: band.label,
+      taxable: `${gbp(from)}${band.upTo === null ? ' and above' : ` to ${gbp(band.upTo)}`}`,
+      gross: `${gbp(from + YEAR.incomeTax.personalAllowance)}${band.upTo === null ? ' and above' : ` to ${gbp(band.upTo + YEAR.incomeTax.personalAllowance)}`}`,
+      rate: pct(band.rate),
+    };
+  });
+---
+
+<GuideLayout guide={guide} sourceKey="payeAndNi">
+  <p class="tool-standfirst">
+    Every rate, band and allowance for the {YEAR.label} tax year, which runs from{' '}
+    {new Date(YEAR.startsOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}{' '}
+    to{' '}
+    {new Date(YEAR.endsOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
+  </p>
+
+  <h2>Personal allowance</h2>
+  <p>
+    {gbp(YEAR.incomeTax.personalAllowance)}, unchanged since April 2022 and now frozen until
+    2030/31 after the Autumn Budget of November 2025 extended the freeze by three years. Above{' '}
+    {gbp(YEAR.incomeTax.taperThreshold)} of adjusted net income it is withdrawn at £1 for every £2,
+    reaching zero at {gbp(125_140)} — which creates the{' '}
+    <a href="/guides/the-100k-tax-trap/">60% effective rate</a> in between.
+  </p>
+
+  <h2>Income tax — England, Wales and Northern Ireland</h2>
+  <div class="table-scroll">
+    <table>
+      <caption>Three bands. Wales sets its rates equal to England's.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Band</th>
+          <th scope="col">Taxable income</th>
+          <th scope="col">Gross income</th>
+          <th scope="col">Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          bandRows(YEAR.incomeTax.bands['england-nireland']).map((row) => (
+            <tr>
+              <td>{row.label}</td>
+              <td>{row.taxable}</td>
+              <td>{row.gross}</td>
+              <td>{row.rate}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="note">
+    <strong>The boundary people get wrong.</strong> The additional rate applies to taxable income
+    above {gbp(125_140)} — not above {gbp(112_570)}. The two are often confused because{' '}
+    {gbp(125_140)} less a full personal allowance is {gbp(112_570)}, but anyone reaching this band
+    has already lost their allowance entirely. Using the wrong figure overstates the tax on a{' '}
+    {gbp(150_000)} salary by {gbp(628.5)}.
+  </p>
+
+  <h2>Income tax — Scotland</h2>
+  <div class="table-scroll">
+    <table>
+      <caption>
+        Six bands. The starter and basic limits rose 7.4%; higher, advanced and top were frozen.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Band</th>
+          <th scope="col">Taxable income</th>
+          <th scope="col">Gross income</th>
+          <th scope="col">Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          bandRows(YEAR.incomeTax.bands.scotland).map((row) => (
+            <tr>
+              <td>{row.label}</td>
+              <td>{row.taxable}</td>
+              <td>{row.gross}</td>
+              <td>{row.rate}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <p>
+    <a href="/guides/scottish-income-tax-vs-rest-of-uk/">
+      How Scotland compares with the rest of the UK
+    </a>
+  </p>
+
+  <h2>National Insurance</h2>
+  <div class="table-scroll">
+    <table>
+      <caption>Class 1 — employees and employers</caption>
+      <tbody>
+        <tr>
+          <td>Employee rate, {gbp(YEAR.nationalInsurance.employee.primaryThreshold)} to {gbp(YEAR.nationalInsurance.employee.upperEarningsLimit)}</td>
+          <td>{pct(YEAR.nationalInsurance.employee.mainRate)}</td>
+        </tr>
+        <tr>
+          <td>Employee rate above {gbp(YEAR.nationalInsurance.employee.upperEarningsLimit)}</td>
+          <td>{pct(YEAR.nationalInsurance.employee.upperRate)}</td>
+        </tr>
+        <tr>
+          <td>Employer rate above {gbp(YEAR.nationalInsurance.employer.secondaryThreshold)}</td>
+          <td>{pct(YEAR.nationalInsurance.employer.rate)}</td>
+        </tr>
+        <tr><td>Employment Allowance</td><td>{gbp(YEAR.nationalInsurance.employer.employmentAllowance)}</td></tr>
+        <tr><td>Lower Earnings Limit</td><td>{gbp(YEAR.nationalInsurance.lowerEarningsLimit)}</td></tr>
+        <tr><td>Class 1A on benefits in kind</td><td>{pct(YEAR.nationalInsurance.employer.class1aRate)}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-scroll">
+    <table>
+      <caption>Class 4 — the self-employed. Class 2 was abolished in April 2024.</caption>
+      <tbody>
+        <tr>
+          <td>
+            {gbp(YEAR.nationalInsurance.selfEmployed.class4LowerLimit)} to{' '}
+            {gbp(YEAR.nationalInsurance.selfEmployed.class4UpperLimit)}
+          </td>
+          <td>{pct(YEAR.nationalInsurance.selfEmployed.class4MainRate)}</td>
+        </tr>
+        <tr>
+          <td>Above {gbp(YEAR.nationalInsurance.selfEmployed.class4UpperLimit)}</td>
+          <td>{pct(YEAR.nationalInsurance.selfEmployed.class4UpperRate)}</td>
+        </tr>
+        <tr>
+          <td>Small profits threshold</td>
+          <td>{gbp(YEAR.nationalInsurance.selfEmployed.smallProfitsThreshold)}</td>
+        </tr>
+        <tr>
+          <td>Voluntary Class 2 below that</td>
+          <td>£{YEAR.nationalInsurance.selfEmployed.class2VoluntaryWeekly.toFixed(2)} a week</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Dividends — up 2 points this year</h2>
+  <div class="table-scroll">
+    <table>
+      <caption>Increased from 6 April 2026. Dividend rates are not devolved.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Band</th>
+          <th scope="col">2025/26</th>
+          <th scope="col">{YEAR.label}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Ordinary</td><td>8.75%</td><td>{pct(YEAR.incomeTax.dividend.ordinaryRate)}</td></tr>
+        <tr><td>Upper</td><td>33.75%</td><td>{pct(YEAR.incomeTax.dividend.upperRate)}</td></tr>
+        <tr><td>Additional</td><td>39.35%</td><td>{pct(YEAR.incomeTax.dividend.additionalRate)}</td></tr>
+        <tr><td>Allowance</td><td>{gbp(500)}</td><td>{gbp(YEAR.incomeTax.dividend.allowance)}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Other key figures</h2>
+  <div class="table-scroll">
+    <table>
+      <tbody>
+        <tr><td>Pension annual allowance</td><td>{gbp(YEAR.pensions.annualAllowance)}</td></tr>
+        <tr><td>Money purchase annual allowance</td><td>{gbp(YEAR.pensions.moneyPurchaseAnnualAllowance)}</td></tr>
+        <tr><td>Capital gains annual exempt amount</td><td>{gbp(YEAR.capitalGains.annualExemptAmount)}</td></tr>
+        <tr><td>Corporation tax, small profits</td><td>{pct(YEAR.corporationTax.smallProfitsRate)}</td></tr>
+        <tr><td>Corporation tax, main rate</td><td>{pct(YEAR.corporationTax.mainRate)}</td></tr>
+        <tr><td>VAT registration threshold</td><td>{gbp(YEAR.vat.registrationThreshold)}</td></tr>
+        <tr><td>Child Benefit, eldest child</td><td>£{YEAR.childBenefit.eldestWeekly.toFixed(2)} a week</td></tr>
+        <tr><td>High Income Child Benefit Charge starts</td><td>{gbp(YEAR.childBenefit.hicbcThreshold)}</td></tr>
+        <tr><td>Approved mileage, first 10,000 miles</td><td>{(YEAR.mileage.carFirst10000 * 100).toFixed(0)}p</td></tr>
+        <tr><td>Statutory redundancy weekly cap</td><td>{gbp(YEAR.redundancy.weeklyPayCap)}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Already announced for later years</h2>
+  <ul>
+    <li>
+      <strong>April 2027:</strong> basic, higher and additional rates on savings income UK-wide, and
+      on property income in England, Wales and Northern Ireland, rise 2 points to 22%, 42% and 47%.
+      The cash ISA allowance falls to £12,000 for under-65s.
+    </li>
+    <li>
+      <strong>April 2029:</strong> National Insurance relief on salary-sacrificed pension
+      contributions is capped at £2,000 a year.
+      <a href="/guides/salary-sacrifice-explained/">What that means</a>.
+    </li>
+    <li>
+      <strong>To 2030/31:</strong> income tax and National Insurance thresholds stay frozen, so
+      fiscal drag continues to pull more people into higher bands.
+    </li>
+  </ul>
+
+  <p>
+    <a href="/rates/">Every figure with its source</a> &middot;{' '}
+    <a href="/changelog/">What changed and when</a>
+  </p>
+</GuideLayout>

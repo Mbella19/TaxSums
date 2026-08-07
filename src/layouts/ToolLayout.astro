@@ -1,0 +1,92 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import AdSlot from '../components/AdSlot.astro';
+import RateProvenance from '../components/RateProvenance.astro';
+import RelatedTools from '../components/RelatedTools.astro';
+import { SITE } from '../config';
+import { categoryBySlug, type Tool } from '../data/site';
+import { CURRENT_TAX_YEAR } from '../data/tax-years';
+
+interface Props {
+  tool: Tool;
+}
+
+const { tool } = Astro.props;
+const category = categoryBySlug(tool.category);
+
+// A calculator is a web application, not an article. Marking it as one is both
+// accurate and what lets it appear as a tool rather than a page of prose.
+const appSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: tool.h1,
+  url: new URL(`/${tool.slug}/`, SITE.origin).href,
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Any',
+  browserRequirements: 'Requires JavaScript',
+  description: tool.metaDescription,
+  inLanguage: SITE.lang,
+  isAccessibleForFree: true,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'GBP' },
+  publisher: { '@type': 'Organization', name: SITE.name, url: SITE.origin },
+};
+---
+
+<BaseLayout
+  title={tool.title}
+  description={tool.metaDescription}
+  schema={[appSchema]}
+  crumbs={[{ label: category.navTitle, href: `/${category.slug}/` }, { label: tool.shortName }]}
+>
+  <div class="wrap">
+    <div class="tool-header">
+      <h1>{tool.h1}</h1>
+      <p class="tool-standfirst">{tool.standfirst}</p>
+      <RateProvenance sourceKey={tool.sourceKey} />
+    </div>
+
+    <div class="tool-body">
+      <div>
+        {/* The calculator itself — the only interactive part of the page. */}
+        <slot name="calculator" />
+
+        <AdSlot format="leaderboard" />
+
+        {/*
+          Everything below is server-rendered static HTML. Google indexes it
+          without running any JavaScript, which is the whole point of putting
+          the explanation outside the island.
+        */}
+        <div class="prose">
+          <slot name="explanation" />
+        </div>
+
+        <div class="deferred">
+          <slot name="reference" />
+        </div>
+
+        <AdSlot format="rectangle" />
+
+        <div class="prose deferred">
+          <slot name="limits" />
+        </div>
+
+        <slot name="faq" />
+
+        <RelatedTools tool={tool} />
+
+        <p class="verified">
+          <span>
+            Tax year {CURRENT_TAX_YEAR.label} &middot; <a href="/methodology/">How we calculate</a>
+            &middot; <a href="/rates/">All rates and sources</a> &middot;
+            <a href="/changelog/">What changed</a>
+          </span>
+        </p>
+      </div>
+
+      <aside class="tool-aside">
+        <AdSlot format="sidebar" />
+      </aside>
+    </div>
+  </div>
+</BaseLayout>
