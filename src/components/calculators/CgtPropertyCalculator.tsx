@@ -104,11 +104,12 @@ export default function CgtPropertyCalculator() {
           name="lived-in"
           value={state.livedIn ? 'yes' : 'no'}
           options={[
-            { value: 'no', label: 'No — always let or second home' },
-            { value: 'yes', label: 'Yes, for part of the time' },
+            { value: 'no', label: 'No' },
+            { value: 'yes', label: 'Yes, for a while' },
           ]}
           onInput={(value) => update({ livedIn: value === 'yes' })}
           span
+          hint="Any period it was genuinely your main home earns Private Residence Relief for that share of the gain. Answer no if it was always let or a second home."
         />
 
         {state.livedIn && (

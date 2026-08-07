@@ -75,7 +75,7 @@ export default function StampDutyCalculator({ region }: Props) {
     ...(rules.firstTimeBuyerRelief
       ? [{ value: 'first-time' as const, label: 'First-time buyer' }]
       : []),
-    { value: 'additional' as const, label: 'Second home or buy-to-let' },
+    { value: 'additional' as const, label: 'Second home' },
   ];
 
   return (
@@ -97,8 +97,8 @@ export default function StampDutyCalculator({ region }: Props) {
           onInput={(value) => update({ buyerType: value })}
           hint={
             rules.firstTimeBuyerRelief === null
-              ? `${REGION_LABEL[region]} has no first-time buyer relief — the £${rules.standardBands[0]!.upTo?.toLocaleString('en-GB')} nil-rate band applies to everyone.`
-              : undefined
+              ? `Buy-to-lets count as a second home. ${REGION_LABEL[region]} has no first-time buyer relief — the £${rules.standardBands[0]!.upTo?.toLocaleString('en-GB')} nil-rate band applies to everyone.`
+              : 'Buy-to-lets and holiday homes both count as a second home.'
           }
         />
 
@@ -108,10 +108,11 @@ export default function StampDutyCalculator({ region }: Props) {
             name="residency"
             value={state.nonResident ? 'no' : 'yes'}
             options={[
-              { value: 'yes', label: 'UK resident' },
-              { value: 'no', label: `Non-resident (+${pct(rules.nonResidentSurcharge)})` },
+              { value: 'yes', label: 'Yes' },
+              { value: 'no', label: 'No' },
             ]}
             onInput={(value) => update({ nonResident: value === 'no' })}
+            hint={`Non-residents pay a further ${pct(rules.nonResidentSurcharge)} on every band. You count as resident if you spent 183 days in the UK in the year before the purchase.`}
           />
         )}
       </div>

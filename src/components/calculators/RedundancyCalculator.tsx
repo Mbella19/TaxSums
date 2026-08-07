@@ -87,10 +87,11 @@ export default function RedundancyCalculator() {
           name="nation"
           value={state.nation}
           options={[
-            { value: 'gb', label: 'England, Scotland or Wales' },
+            { value: 'gb', label: 'Great Britain' },
             { value: 'ni', label: 'Northern Ireland' },
           ]}
           onInput={(value) => update({ nation: value })}
+          hint="England, Scotland and Wales share one weekly pay cap. Northern Ireland sets its own, and it is higher."
         />
         <MoneyInput
           id="enhanced"

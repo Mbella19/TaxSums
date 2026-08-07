@@ -55,11 +55,19 @@ const sections = [
       <RateProvenance sourceKey={tool.sourceKey} />
     </div>
 
+    {/*
+      The calculator sits outside the two-column body and takes the full page
+      width. It is the reason the page exists, and sharing a row with a 340px ad
+      rail left it under 400px — narrow enough that a group of three options
+      could not fit on one line. The rail belongs beside the reading matter
+      below, not beside the thing people came to use.
+    */}
+    <div class="tool-calculator">
+      <slot name="calculator" />
+    </div>
+
     <div class="tool-body">
       <div>
-        {/* The calculator itself — the only interactive part of the page. */}
-        <slot name="calculator" />
-
         {/*
           Zone 1: after the answer, before the working. The reader has what they
           came for, so an advert here interrupts nothing — and it is far enough

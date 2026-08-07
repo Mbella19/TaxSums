@@ -895,6 +895,11 @@ code {
   font-weight: 650;
 }
 
+/* The calculator gets the whole width, above the two-column reading area. */
+.tool-calculator {
+  padding-block: 1.5rem 0;
+}
+
 .tool-body {
   display: flex;
   gap: clamp(1.375rem, 3vw, 2.75rem);
@@ -987,11 +992,22 @@ code {
 /* ---------- Calculator ---------- */
 
 .calc {
-  background: var(--paper-raised);
+  /*
+   * The card carries the result panel's colour and the form paints over it.
+   * That is what lets the result shrink to its content and still leave a clean
+   * column of the right colour beneath it, rather than a two-tone notch.
+   */
+  background: var(--paper-deep);
   border: 1px solid var(--rule);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  overflow: hidden;
+  /*
+   * `clip`, not `hidden`. Both keep the square-cornered panes inside the card's
+   * rounded edge, but `hidden` makes the card a scroll container, which
+   * silently cancels `position: sticky` on the result pane below. `clip` does
+   * not.
+   */
+  overflow: clip;
   /*
    * Inputs and the answer sit side by side once there is room for both, so the
    * result is visible without scrolling and the reader can see a figure change
@@ -1005,44 +1021,59 @@ code {
   min-width: 0;
 }
 
+/*
+ * The answer follows you down a long form instead of scrolling away — which
+ * also disposes of the several hundred pixels of dead panel that appeared
+ * whenever the form was much taller than its result.
+ */
+@media (min-width: 54rem) {
+  .calc {
+    align-items: flex-start;
+  }
+  .calc-result {
+    position: sticky;
+    /* Clears the sticky site header. */
+    top: 4.75rem;
+  }
+}
+
+/*
+ * The form takes the larger share. A chip group needs a full row to lay out
+ * evenly, and half of a half is not enough for one — that is what produced the
+ * ragged staircase of buttons in the first cut.
+ */
 .calc-inputs {
-  flex: 1 1 20.6rem;
+  flex: 1.35 1 22rem;
   min-width: 0;
   display: grid;
-  gap: 1.05rem 1.25rem;
+  gap: 1.5rem 1.4rem;
   align-content: start;
-  padding: clamp(1.06rem, 2.3vw, 1.63rem);
+  padding: clamp(1.25rem, 2.4vw, 1.9rem);
+  background: var(--paper-raised);
+  /* Painted over the card's own colour, so it must reach the bottom. */
+  align-self: stretch;
 }
 .calc-inputs > * {
   min-width: 0;
 }
-@media (min-width: 34rem) {
+@media (min-width: 30rem) {
   .calc-inputs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .calc-inputs .span-2 {
+  /*
+   * Plain fields pair up; anything with a set of options always gets the whole
+   * row. Never squeeze five choices into half a column.
+   */
+  .calc-inputs .span-2,
+  .calc-inputs fieldset {
     grid-column: 1 / -1;
-  }
-}
-/*
- * Once the result sits beside the inputs the input column is too narrow for
- * two fields abreast, so it goes back to one.
- */
-@media (min-width: 54rem) {
-  .calc-inputs {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-@media (min-width: 78rem) {
-  .calc-inputs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.45rem;
   min-width: 0;
 }
 .field label,
@@ -1050,12 +1081,21 @@ code {
   font-size: 0.844rem;
   font-weight: 650;
   color: var(--ink);
+  /* Two-word labels should not stack when there is room for one line. */
+  text-wrap: balance;
 }
+/*
+ * The hint belongs to the control above it, so it sits closer to that than the
+ * group below. Without this the two gaps are equal and the hint reads as an
+ * orphan floating between fields.
+ */
 .field .hint,
 fieldset .hint {
   font-size: 0.781rem;
   color: var(--ink-faint);
   line-height: 1.45;
+  margin-top: -0.1rem;
+  max-width: 52ch;
 }
 
 .field input[type='number'],
@@ -1066,13 +1106,13 @@ fieldset .hint {
   min-width: 0;
   font: inherit;
   font-variant-numeric: tabular-nums;
-  padding: 0.6rem 0.7rem;
+  padding: 0.6rem 0.75rem;
   border: 1px solid var(--rule-strong);
   border-radius: 8px;
   background: var(--paper);
   color: var(--ink);
-  /* 44px is the minimum comfortable touch target. */
-  min-height: 44px;
+  /* Matches the chips, so controls line up across a row whatever their type. */
+  min-height: 46px;
 }
 .field input:focus,
 .field select:focus {
@@ -1098,7 +1138,7 @@ fieldset .hint {
   border-radius: 8px;
   background: var(--paper);
   overflow: hidden;
-  min-height: 44px;
+  min-height: 46px;
 }
 .prefixed:focus-within {
   border-color: var(--accent-bright);
@@ -1131,68 +1171,115 @@ fieldset {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.42rem;
+  gap: 0.5rem;
 }
-.choices {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.38rem;
-}
+
 /*
- * The label is the tap target, not the radio inside it — clicking anywhere on
- * the chip selects the option. 44px keeps it comfortable on a phone.
+ * Options behave as one segmented control rather than a bag of loose buttons.
+ *
+ * A grid, not wrapping flex. Flex sizes each chip to its own words, which is
+ * what produced the ragged staircase — and growing them to fill the row is
+ * worse, because a lone chip on the last row stretches into a full-width bar.
+ *
+ * `auto-fit` gives the best of both: when the whole set fits on one line the
+ * empty tracks collapse and the chips divide the row equally; when it wraps,
+ * the columns stay aligned and a short last row simply leaves a gap.
+ */
+.choices {
+  display: grid;
+  /*
+   * 9.25rem is set by the longest option on the site — "Relief at source",
+   * which needs 141px with its padding. Anything narrower and it wraps to two
+   * lines, which is what made these look like blocks rather than buttons.
+   *
+   * The cost is that a four-option group takes two rows instead of one. That is
+   * the better trade: the columns still line up, and the alternative was
+   * shrinking the label text to fit.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(9.25rem, 1fr));
+  /*
+   * Every chip in a group is the height of the tallest, so one option that has
+   * to wrap cannot leave the rest of the group looking ragged.
+   */
+  grid-auto-rows: 1fr;
+  gap: 0.5rem;
+}
+
+/*
+ * The label is the tap target, not the control inside it — clicking anywhere on
+ * the chip selects the option. 46px keeps it comfortable on a phone.
  */
 .choices label {
+  position: relative;
+  /* Grid items default to min-width:auto; a long option would otherwise widen
+     its track and break the equal columns. */
+  min-width: 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.875rem;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.25;
+  font-size: 0.906rem;
   font-weight: 500;
-  padding-inline: 0.8rem;
-  min-height: 44px;
+  padding: 0.5rem 0.7rem;
+  min-height: 46px;
   border: 1px solid var(--rule-strong);
   border-radius: 8px;
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-prose);
   transition:
-    transform 0.13s var(--ease),
-    background 0.13s ease,
-    border-color 0.13s ease,
-    color 0.13s ease;
+    background 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease,
+    box-shadow 0.14s ease;
 }
 .choices label:hover {
   border-color: var(--accent);
-  background: var(--paper-raised);
   color: var(--accent);
-  transform: translateY(-1px);
-}
-.choices label:active {
-  transform: scale(0.96);
   background: var(--accent-wash);
+}
+
+/*
+ * The chip itself is the control, so the radio dot is redundant — a box inside
+ * a box is what made these look heavy. The input stays in the DOM, focusable
+ * and announced with its checked state; it is only the marker that goes.
+ *
+ * Selection is signalled four ways, none of them colour alone: a doubled
+ * border (the inset ring), a filled background, accent text, and heavier
+ * weight. The inset ring rather than a thicker border, so nothing reflows on
+ * selection.
+ */
+.choices input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  margin: 0;
+  pointer-events: none;
 }
 .choices label:has(input:checked) {
   border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
   background: var(--accent-wash);
   color: var(--accent);
   font-weight: 650;
-  transform: none;
 }
-.choices input {
-  accent-color: var(--accent);
-  margin: 0;
+.choices label:has(input:focus-visible) {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
 }
 
 /* ---------- Results ---------- */
 
 .calc-result {
-  flex: 1 1 20rem;
+  flex: 1 1 19rem;
   min-width: 0;
   background: var(--paper-deep);
-  padding: clamp(1.06rem, 2.3vw, 1.63rem);
+  padding: clamp(1.25rem, 2.4vw, 1.9rem);
   display: flex;
   flex-direction: column;
-  gap: 1.06rem;
+  gap: 1.25rem;
 }
 /* Stacked: the result needs a rule to separate it. Side by side: a border. */
 @media (max-width: 53.999rem) {
@@ -1311,7 +1398,9 @@ fieldset {
 
 .figure-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(7.4rem, 1fr));
+  /* 9rem lands on two even columns in the result pane, so four figures read as
+     a 2x2 block rather than splitting three-then-one. */
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   gap: 0.56rem;
   margin: 0;
 }
@@ -1321,6 +1410,16 @@ fieldset {
   border-radius: 8px;
   padding: 0.69rem 0.81rem;
   min-width: 0;
+  /*
+   * The figure sits at the foot of its card, so values stay on one line across
+   * the row even when a label like "National Insurance" wraps to two.
+   */
+  display: flex;
+  flex-direction: column;
+}
+.figure-row dd,
+.figure-row .value {
+  margin-top: auto;
 }
 .figure-row dt,
 .figure-row .label {
@@ -1340,12 +1439,18 @@ fieldset {
   letter-spacing: -0.02em;
 }
 
+/*
+ * Directly under the figures, not pinned to the foot of the panel. When the
+ * form is long the panel is much taller than its contents, and pinning left the
+ * actions stranded half a screen below the number they act on.
+ */
 .result-actions {
   display: flex;
   gap: 0.56rem;
   flex-wrap: wrap;
   align-items: center;
-  margin-top: auto;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
 }
 .result-actions button,
 .result-actions a {

@@ -39,7 +39,7 @@ const PENSION_METHODS = [
 const LOAN_PLANS = [
   { value: 'plan1', label: 'Plan 1' },
   { value: 'plan2', label: 'Plan 2' },
-  { value: 'plan4', label: 'Plan 4 (Scotland)' },
+  { value: 'plan4', label: 'Plan 4' },
   { value: 'plan5', label: 'Plan 5' },
   { value: 'postgrad', label: 'Postgraduate' },
 ];
@@ -158,7 +158,7 @@ export default function TakeHomeCalculator({ fixedRegion }: Props) {
           options={LOAN_PLANS}
           onInput={setLoans}
           span
-          hint="A postgraduate loan is repaid alongside an undergraduate plan, not instead of it."
+          hint="Plan 4 is the Scottish plan. A postgraduate loan is repaid alongside an undergraduate plan, not instead of it."
         />
 
         <MoneyInput

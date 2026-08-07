@@ -97,9 +97,10 @@ export default function VatFlatRateCalculator() {
           value={state.firstYear ? 'yes' : 'no'}
           options={[
             { value: 'no', label: 'No' },
-            { value: 'yes', label: 'Yes — 1% discount' },
+            { value: 'yes', label: 'Yes' },
           ]}
           onInput={(value) => update({ firstYear: value === 'yes' })}
+          hint="A 1% discount comes off your flat rate for the first year after registering."
         />
       </div>
 
