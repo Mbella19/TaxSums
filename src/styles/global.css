@@ -1022,18 +1022,17 @@ code {
 }
 
 /*
- * The answer follows you down a long form instead of scrolling away — which
- * also disposes of the several hundred pixels of dead panel that appeared
- * whenever the form was much taller than its result.
+ * The result sits still. It sizes to its own content rather than stretching,
+ * so the card colour simply continues beneath it — which is why the card and
+ * the result panel share a background.
+ *
+ * It was briefly sticky, so the answer followed you down a long form. It read
+ * as the panel sliding about under the cursor, which is worse than having to
+ * scroll back up for it.
  */
 @media (min-width: 54rem) {
   .calc {
     align-items: flex-start;
-  }
-  .calc-result {
-    position: sticky;
-    /* Clears the sticky site header. */
-    top: 4.75rem;
   }
 }
 
