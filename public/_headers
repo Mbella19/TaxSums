@@ -20,6 +20,13 @@
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
 
+# Fonts live in public/ so Astro does not fingerprint them — the hash in the
+# filename is put there by hand for exactly this reason. Without it they fall
+# through to the default and revalidate on every single page load, which is a
+# round trip for 50 KB that changes roughly never.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
 # HTML must revalidate every time. A Budget update has to appear immediately,
 # not sit behind a stale page for a year.
 /

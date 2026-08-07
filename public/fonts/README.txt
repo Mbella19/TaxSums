@@ -11,6 +11,11 @@ Latin subset as follows, which is permitted under the OFL:
 
 Result: 196 KB -> 50 KB across the two files.
 
+The hash in each filename is added by hand (first 8 chars of sha256). Astro
+only fingerprints what it bundles, and files in public/ are copied verbatim —
+so without it the fonts cannot be served immutable. Regenerate the hash when
+you rebuild, and update the @font-face rules and the preload in BaseLayout.
+
 To rebuild after a font update:
 
   pip install fonttools brotli
