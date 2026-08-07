@@ -117,14 +117,39 @@ stays open.
 `.github/workflows/ci.yml` runs typecheck, build and the full test suite on
 every push and pull request, and uploads the built `dist/` as an artifact.
 
+## Hostnames
+
+The apex is canonical. Everything else 301s to it, and every hop preserves the
+path and the query string — which matters here because the calculators carry
+their inputs in the query string, so a redirect that dropped it would quietly
+reset a shared result to the defaults.
+
+| Request | Result |
+| --- | --- |
+| `https://taxsums.co.uk/…` | 200 — canonical |
+| `https://www.taxsums.co.uk/…` | 301 → apex |
+| `http://taxsums.co.uk/…` | 301 → https apex |
+| `http://www.taxsums.co.uk/…` | 301 → https www → 301 → https apex |
+
+Three pieces of Cloudflare configuration, none of them in this repo:
+
+1. **DNS** — `www` as a *proxied* CNAME to `taxsums.co.uk`. Proxied is not
+   optional: grey-cloud traffic bypasses the rules engine and the redirect
+   never runs.
+2. **Redirect Rule** — "Redirect from WWW to root", wildcard `https://www.*` →
+   `https://${1}`, 301, *preserve query string* ticked.
+3. **Always Use HTTPS** (SSL/TLS → Edge Certificates) — without it the apex
+   answers on plain HTTP with a 200 and Google sees two separate origins.
+
+`www` is deliberately *not* a second Worker custom domain. Attaching it would
+serve the identical site on both hostnames, which is duplicate content; the
+redirect is the point.
+
 ## Still to do
 
-1. **www redirect** — only the apex is attached. Add a Redirect Rule in the
-   Cloudflare dashboard (`www.taxsums.co.uk/*` → `https://taxsums.co.uk/$1`,
-   301) so the two hostnames never serve duplicate content.
-2. **Search Console + Bing Webmaster Tools** — verify the domain and submit
+1. **Search Console + Bing Webmaster Tools** — verify the domain and submit
    `/sitemap-index.xml`.
-3. **AdSense** — apply only once there is real traffic. Then set
+2. **AdSense** — apply only once there is real traffic. Then set
    `ADS_ENABLED = true` and `ADSENSE_CLIENT` in `src/config.ts` and add slot IDs
    to the `AdSlot` usages. Slots already reserve their height, so switching them
    on cannot shift layout.
