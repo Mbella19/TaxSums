@@ -1,0 +1,76 @@
+---
+import { ADS_ENABLED, ADSENSE_CLIENT } from '../config';
+
+interface Props {
+  slot?: string;
+}
+
+const { slot } = Astro.props;
+const live = ADS_ENABLED && ADSENSE_CLIENT && slot;
+---
+
+{
+  /*
+   * Mobile anchor unit, hidden above 48rem in CSS.
+   *
+   * `position: sticky` rather than `fixed`, so it takes part in layout and
+   * cannot end up covering the last line of a page. Dismissible because an
+   * advert you cannot get rid of on a small screen is a bad experience whatever
+   * the policy says — and the dismissal is remembered for the session.
+   *
+   * Not rendered at all on trust pages: someone reading /about/ or /privacy/ is
+   * there to decide whether to believe us, and that is the wrong moment to
+   * monetise.
+   */
+}
+<aside class="ad-anchor" id="anchor-ad" aria-label="Advertisement">
+  <div class="ad-anchor-head">
+    <p class="ad-label">Advertisement</p>
+    <button type="button" id="anchor-ad-close" aria-label="Close advertisement">&times;</button>
+  </div>
+  <div class="ad-slot" data-format="anchor">
+    {
+      live ? (
+        <ins
+          class="adsbygoogle"
+          style="display:block;width:100%;height:50px"
+          data-ad-client={ADSENSE_CLIENT}
+          data-ad-slot={slot}
+        />
+      ) : (
+        <span>320×50 anchor</span>
+      )
+    }
+  </div>
+</aside>
+
+<script is:inline>
+  (() => {
+    const anchor = document.getElementById('anchor-ad');
+    const close = document.getElementById('anchor-ad-close');
+    if (!anchor || !close) return;
+
+    if (sessionStorage.getItem('anchor-ad-dismissed') === '1') {
+      anchor.hidden = true;
+      return;
+    }
+
+    close.addEventListener('click', () => {
+      anchor.hidden = true;
+      // Session, not local: dismissing it today should not hide it forever.
+      try {
+        sessionStorage.setItem('anchor-ad-dismissed', '1');
+      } catch {
+        /* Private browsing can refuse storage; the dismissal still works. */
+      }
+    });
+  })();
+</script>
+
+{
+  live && (
+    <script is:inline>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  )
+}

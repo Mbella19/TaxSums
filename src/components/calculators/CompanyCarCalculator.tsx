@@ -1,7 +1,17 @@
 import { useMemo } from 'preact/hooks';
 import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
 import { appropriatePercentage, calculateCompanyCar, type FuelType } from '../../lib/company-car';
-import { ChoiceGroup, FigureRow, gbp, Headline, MoneyInput, NumberInput, pct, useUrlState } from './ui';
+import {
+  ChoiceGroup,
+  FigureRow,
+  gbp,
+  Headline,
+  MoneyInput,
+  NumberInput,
+  pct,
+  ResultActions,
+  useUrlState,
+} from './ui';
 
 const FUEL_TYPES = [
   { value: 'electric' as const, label: 'Electric' },
@@ -168,6 +178,11 @@ export default function CompanyCarCalculator() {
           </p>
         )}
 
+
+        <ResultActions />
+      </div>
+
+      <div class="calc-detail">
         <div class="table-scroll">
           <table>
             <caption>How the benefit was worked out</caption>

@@ -2,7 +2,16 @@ import { useMemo } from 'preact/hooks';
 import { affordabilityRange, loanToValue } from '../../lib/mortgage';
 import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
 import { calculateTakeHome } from '../../lib/take-home';
-import { FigureRow, gbp, Headline, MoneyInput, NumberInput, pct, useUrlState } from './ui';
+import {
+  FigureRow,
+  gbp,
+  Headline,
+  MoneyInput,
+  NumberInput,
+  pct,
+  ResultActions,
+  useUrlState,
+} from './ui';
 
 export default function MortgageAffordabilityCalculator() {
   const [state, update] = useUrlState({
@@ -132,6 +141,11 @@ export default function MortgageAffordabilityCalculator() {
           ]}
         />
 
+
+        <ResultActions />
+      </div>
+
+      <div class="calc-detail">
         <div class="table-scroll">
           <table>
             <caption>What each income multiple buys</caption>

@@ -1,7 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import AdSlot from '../components/AdSlot.astro';
-import RateProvenance from '../components/RateProvenance.astro';
 import { SITE } from '../config';
 import { toolBySlug, type Guide } from '../data/site';
 import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
@@ -13,6 +12,23 @@ interface Props {
 
 const { guide, sourceKey } = Astro.props;
 const tools = guide.relatedTools.map(toolBySlug);
+const source = YEAR.sources[sourceKey];
+
+if (!source) {
+  throw new Error(
+    `No source registered for "${sourceKey}". Add it to the tax year's sources map so the guide can cite its figures.`,
+  );
+}
+
+const verified = new Date(source.verifiedOn).toLocaleDateString('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+// The primary tool this guide feeds into, used for the mid-article call to
+// action. A guide that explains a rule should always offer to run it.
+const primary = tools[0];
 
 const articleSchema = {
   '@context': 'https://schema.org',
@@ -22,7 +38,11 @@ const articleSchema = {
   inLanguage: SITE.lang,
   datePublished: '2026-08-07',
   dateModified: '2026-08-07',
-  author: { '@type': 'Organization', name: SITE.author.name, url: new URL(SITE.author.url, SITE.origin).href },
+  author: {
+    '@type': 'Organization',
+    name: SITE.author.name,
+    url: new URL(SITE.author.url, SITE.origin).href,
+  },
   publisher: { '@type': 'Organization', name: SITE.name, url: SITE.origin },
   mainEntityOfPage: new URL(`/guides/${guide.slug}/`, SITE.origin).href,
 };
@@ -35,44 +55,82 @@ const articleSchema = {
   crumbs={[{ label: 'Guides', href: '/guides/' }, { label: guide.shortName }]}
 >
   <div class="wrap">
-    <div class="tool-header">
-      <h1>{guide.h1}</h1>
-      <RateProvenance sourceKey={sourceKey} />
-    </div>
-
     <div class="tool-body">
-      <div>
-        <article class="prose">
-          <slot />
-        </article>
+      <article>
+        <header class="guide-header">
+          <span class="eyebrow">Guide &middot; {guide.topic}</span>
+          <h1>{guide.h1}</h1>
+          <p class="guide-standfirst">{guide.standfirst}</p>
+          <p class="guide-meta">
+            By the {SITE.author.name} &middot; Updated {verified} &middot;
+            {guide.readingMinutes} min read &middot; <a href="/rates/">Sources</a>
+          </p>
+        </header>
 
+        {
+          Astro.slots.has('summary') && (
+            <div class="in-short">
+              <span class="eyebrow">In short</span>
+              <slot name="summary" />
+            </div>
+          )
+        }
+
+        <div class="prose">
+          <slot />
+        </div>
+
+        {/* Zone 1: after the first substantial section of an article. */}
         <AdSlot format="rectangle" />
 
-        <section>
-          <h2>Work out your own numbers</h2>
-          <ul class="card-grid">
-            {
-              tools.map((tool) => (
-                <li>
-                  <a class="card" href={`/${tool.slug}/`}>
-                    <strong>{tool.h1}</strong>
-                    <span>{tool.standfirst}</span>
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
-        </section>
+        {
+          primary && (
+            <div class="cta-panel">
+              <span class="eyebrow">Work out your own numbers</span>
+              <h2>{primary.standfirst}</h2>
+              <p>
+                Runs entirely in your browser on {YEAR.label} rates. Nothing you type is sent
+                anywhere.
+              </p>
+              <a class="btn-cta" href={`/${primary.slug}/`}>
+                Open the {primary.shortName.toLowerCase()} calculator
+              </a>
+            </div>
+          )
+        }
+
+        {
+          tools.length > 1 && (
+            <section>
+              <h2>Related calculators</h2>
+              <ul class="card-grid">
+                {tools.map((tool) => (
+                  <li>
+                    <a class="card" href={`/${tool.slug}/`}>
+                      <strong>{tool.h1}</strong>
+                      <span>{tool.standfirst}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
 
         <p class="verified">
-          <span>
-            Tax year {YEAR.label} &middot; <a href="/rates/">All rates and sources</a> &middot;{' '}
-            <a href="/guides/">More guides</a>
-          </span>
+          Tax year {YEAR.label} &middot; verified {verified} against{' '}
+          <a href={source.url} rel="nofollow noopener" target="_blank">{source.title}</a> &middot;{' '}
+          <a href="/rates/">All rates and sources</a> &middot; <a href="/guides/">More guides</a>
         </p>
-      </div>
+      </article>
 
       <aside class="tool-aside">
+        <div class="rail-card">
+          <span class="eyebrow">Work out your numbers</span>
+          {tools.map((tool) => <a href={`/${tool.slug}/`}>{tool.shortName}</a>)}
+        </div>
+
+        {/* Zone 2: sticky rail, desktop only — hidden below 48rem by CSS. */}
         <AdSlot format="sidebar" />
       </aside>
     </div>

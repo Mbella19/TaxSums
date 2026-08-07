@@ -2,7 +2,16 @@ import { useMemo } from 'preact/hooks';
 import type { Region } from '../../data/types';
 import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
 import { calculatePropertyTax, firstTimeBuyerCliff } from '../../lib/property-tax';
-import { ChoiceGroup, FigureRow, gbp, Headline, MoneyInput, pct, useUrlState } from './ui';
+import {
+  ChoiceGroup,
+  FigureRow,
+  gbp,
+  Headline,
+  MoneyInput,
+  pct,
+  ResultActions,
+  useUrlState,
+} from './ui';
 
 interface Props {
   region: Region;
@@ -146,6 +155,11 @@ export default function StampDutyCalculator({ region }: Props) {
           </p>
         )}
 
+
+        <ResultActions />
+      </div>
+
+      <div class="calc-detail">
         <div class="table-scroll">
           <table>
             <caption>How this was worked out — {rules.name}</caption>

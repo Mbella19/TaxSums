@@ -126,8 +126,17 @@ describeBuilt('built site', () => {
     for (const page of pages) {
       const hrefs = [...page.html.matchAll(/href="(\/[^"#?]*)"/g)].map((m) => m[1]!);
       for (const href of hrefs) {
-        // Assets and generated files are not pages.
-        if (/\.(css|js|svg|ico|png|jpg|xml|txt|webmanifest)$/.test(href)) continue;
+        /*
+         * Assets are not pages, but they still have to exist. A preloaded font
+         * that 404s is worse than a broken page link — it fails silently, and
+         * the only symptom is that headings render in the fallback serif.
+         */
+        if (/\.(css|js|svg|ico|png|jpg|xml|txt|webmanifest|woff2?|ttf)$/.test(href)) {
+          if (!statSync(join(DIST, href), { throwIfNoEntry: false })?.isFile()) {
+            broken.push(`${page.url} -> ${href} (asset missing from dist/)`);
+          }
+          continue;
+        }
         if (!urls.has(href)) broken.push(`${page.url} -> ${href}`);
       }
     }

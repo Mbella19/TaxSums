@@ -8,6 +8,16 @@ interface Props {
 }
 
 const { format, slot } = Astro.props;
+
+// Shown only while ads are switched off, so the reserved space reads as
+// deliberate during development rather than as a broken image.
+const PLACEHOLDER: Record<Props['format'], string> = {
+  leaderboard: '970×250 → 336×280 responsive',
+  rectangle: '336×280 in-content',
+  sidebar: '300×600 half-page',
+};
+
+const live = ADS_ENABLED && ADSENSE_CLIENT && slot;
 ---
 
 {
@@ -19,27 +29,34 @@ const { format, slot } = Astro.props;
    * Placement rule followed throughout: never directly above or beside a
    * calculator's result, and never so close to an input that a mistap is
    * plausible. That is both an AdSense policy matter and a usability one.
+   *
+   * The "Advertisement" label is not decoration. AdSense requires paid units to
+   * be distinguishable from content, and on a page full of financial figures it
+   * is what stops an advert being read as part of a calculation.
    */
 }
-<aside class="ad-slot" data-format={format} aria-hidden="true">
-  {
-    ADS_ENABLED && ADSENSE_CLIENT && slot ? (
-      <ins
-        class="adsbygoogle"
-        style="display:block;width:100%"
-        data-ad-client={ADSENSE_CLIENT}
-        data-ad-slot={slot}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      />
-    ) : (
-      <span>Advertisement</span>
-    )
-  }
+<aside class="ad" aria-label="Advertisement">
+  <p class="ad-label">Advertisement</p>
+  <div class="ad-slot" data-format={format}>
+    {
+      live ? (
+        <ins
+          class="adsbygoogle"
+          style="display:block;width:100%"
+          data-ad-client={ADSENSE_CLIENT}
+          data-ad-slot={slot}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+      ) : (
+        <span>{PLACEHOLDER[format]}</span>
+      )
+    }
+  </div>
 </aside>
 
 {
-  ADS_ENABLED && ADSENSE_CLIENT && slot && (
+  live && (
     <script is:inline>
       (adsbygoogle = window.adsbygoogle || []).push({});
     </script>

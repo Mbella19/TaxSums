@@ -1,0 +1,127 @@
+---
+import { TOOLS, GUIDES, categoryBySlug } from '../data/site';
+
+/**
+ * Header search.
+ *
+ * Deliberately not an island. The whole index is twenty items, so it ships as
+ * server-rendered anchors that are already in the HTML — crawlable, and usable
+ * with JavaScript switched off. The script below only hides the rows that do
+ * not match.
+ */
+/*
+ * The standfirst and category are in the haystack deliberately. Titles alone
+ * are too narrow: "Scottish take-home pay" contains no occurrence of the word
+ * "Scotland", which is what somebody actually types.
+ */
+const INDEX = [
+  ...TOOLS.map((tool) => ({
+    href: `/${tool.slug}/`,
+    label: tool.shortName,
+    terms: [
+      tool.shortName,
+      tool.h1,
+      tool.title,
+      tool.standfirst,
+      categoryBySlug(tool.category).navTitle,
+    ]
+      .join(' ')
+      .toLowerCase(),
+  })),
+  ...GUIDES.map((guide) => ({
+    href: `/guides/${guide.slug}/`,
+    label: guide.shortName,
+    terms: [guide.shortName, guide.h1, guide.standfirst, guide.topic, 'guide']
+      .join(' ')
+      .toLowerCase(),
+  })),
+];
+---
+
+<div class="site-search">
+  <label class="site-search-field">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"></circle>
+      <path d="M11 11l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+    </svg>
+    <input
+      type="search"
+      id="site-search-input"
+      placeholder="Find a calculator"
+      aria-label="Find a calculator"
+      autocomplete="off"
+      role="combobox"
+      aria-expanded="false"
+      aria-controls="site-search-results"
+    />
+  </label>
+
+  <ul class="site-search-results" id="site-search-results" role="listbox">
+    {
+      INDEX.map((entry) => (
+        <li data-terms={entry.terms}>
+          <a href={entry.href} role="option">
+            {entry.label}
+          </a>
+        </li>
+      ))
+    }
+    <li class="site-search-empty" hidden>No calculator matches that.</li>
+  </ul>
+</div>
+
+<script is:inline>
+  (() => {
+    const input = document.getElementById('site-search-input');
+    const list = document.getElementById('site-search-results');
+    if (!input || !list) return;
+
+    const rows = [...list.querySelectorAll('li[data-terms]')];
+    const empty = list.querySelector('.site-search-empty');
+
+    const close = () => {
+      list.removeAttribute('data-open');
+      input.setAttribute('aria-expanded', 'false');
+    };
+
+    const filter = () => {
+      const query = input.value.trim().toLowerCase();
+      if (!query) {
+        close();
+        return;
+      }
+      // Every word must appear somewhere, so "scotland stamp" finds LBTT.
+      const words = query.split(/\s+/);
+      let shown = 0;
+      for (const row of rows) {
+        const terms = row.dataset.terms || '';
+        const match = words.every((word) => terms.includes(word));
+        row.hidden = !match;
+        if (match) shown++;
+      }
+      if (empty) empty.hidden = shown > 0;
+      list.setAttribute('data-open', '');
+      input.setAttribute('aria-expanded', 'true');
+    };
+
+    input.addEventListener('input', filter);
+    input.addEventListener('focus', filter);
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        input.value = '';
+        close();
+      }
+      if (event.key === 'ArrowDown') {
+        const first = rows.find((row) => !row.hidden);
+        if (first) {
+          event.preventDefault();
+          first.querySelector('a').focus();
+        }
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.site-search')) close();
+    });
+  })();
+</script>

@@ -1,7 +1,17 @@
 import { useMemo } from 'preact/hooks';
 import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
 import { compareFlatRate, effectiveRateOnNetTurnover, FLAT_RATE_SECTORS } from '../../lib/vat';
-import { ChoiceGroup, FigureRow, gbp, Headline, MoneyInput, pct, Select, useUrlState } from './ui';
+import {
+  ChoiceGroup,
+  FigureRow,
+  gbp,
+  Headline,
+  MoneyInput,
+  pct,
+  ResultActions,
+  Select,
+  useUrlState,
+} from './ui';
 
 export default function VatFlatRateCalculator() {
   const [state, update] = useUrlState({
@@ -146,6 +156,11 @@ export default function VatFlatRateCalculator() {
           </p>
         )}
 
+
+        <ResultActions />
+      </div>
+
+      <div class="calc-detail">
         <div class="table-scroll">
           <table>
             <caption>Flat Rate Scheme against standard VAT accounting</caption>

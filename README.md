@@ -154,6 +154,57 @@ Two rules make the rest work:
   worked example and FAQ is server-rendered static HTML, so Google indexes the
   content without executing JavaScript.
 
+## Design
+
+Every style lives in `src/styles/global.css`. There are no `<style>` blocks in
+the 40 `.astro` pages and no inline styling in the islands, so the whole site
+is re-skinned by editing tokens in one place.
+
+Type is the system sans stack for anything read at length, and **Newsreader**
+for headings, the brand and headline figures. Newsreader is self-hosted from
+`public/fonts/`, not loaded from Google Fonts: the full family is 196 KB across
+two files, but subset to the characters the site actually emits and with the
+optical-size axis pinned it is **50 KB**. That keeps the promise made on
+`/privacy/` — the built site makes zero third-party requests.
+
+The calculator card is one flex container with three children:
+
+| | |
+| --- | --- |
+| `.calc-inputs` | the form |
+| `.calc-result` | the answer — headline figure, proportion bar, key figures |
+| `.calc-detail` | the working: band tables, full width beneath both |
+
+Inputs and answer sit side by side above 54rem so a figure visibly changes as
+you type; below that they stack, inputs first. The working is full width
+because four columns of money in a 20rem column cannot be read.
+
+Two contrast values from the design were changed rather than copied. `#79808C`
+(eyebrows, table headers, hints) measured 3.46:1 and `#A6ABB4` (ad labels)
+2.01:1 against the surfaces they sit on — both fail WCAG AA at the 11–13px
+sizes they are used at. They were darkened along the same hue to `#676D77` and
+`#676A70`. The design is light-only; the dark palette is derived from the same
+tokens and audited separately.
+
+### Advertising
+
+Four zones, all reserving their height so switching AdSense on cannot shift
+layout, and all labelled — required by AdSense policy, and on a page of
+financial figures it is what stops an advert being read as part of a
+calculation.
+
+| Zone | Placement |
+| --- | --- |
+| 1 | After the answer, before the working |
+| 2 | Between the explanation and the reference tables |
+| 3 | Sticky sidebar, desktop only |
+| 4 | Mobile anchor, dismissible for the session |
+
+No zone sits beside an input. Pass `noAds` to `BaseLayout` to suppress all of
+them — set on `/about/`, `/methodology/`, `/privacy/`, `/terms/`,
+`/disclaimer/`, `/contact/` and the 404. Someone reading those is deciding
+whether to believe the numbers, which is the wrong moment to sell to them.
+
 ## Updating for a Budget
 
 This is the whole point of the design and should take under an hour.
@@ -190,10 +241,11 @@ taxable income (not gross), the SDLT first-time buyer cliff at £500,001, the
 
 - Lighthouse 100 / 100 / 100 / 100 on performance, accessibility, best
   practices and SEO
-- CLS 0, FCP 1.2s, LCP 1.7s
-- 32.5 KB gzipped JavaScript for all twelve calculators; 3.2 KB CSS
-- Zero external requests — no fonts, no CDNs, no analytics
+- CLS 0, FCP 0.8s, LCP 1.2s
+- 32.5 KB gzipped JavaScript for all twelve calculators; 5.9 KB CSS; 50 KB fonts
+- Zero external requests — fonts self-hosted, no CDNs, no analytics
 - No horizontal scroll at 320px on any page
+- Zero axe violations against WCAG 2.1 AA, in both light and dark themes
 
 ## Notes
 

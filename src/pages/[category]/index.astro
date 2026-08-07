@@ -18,10 +18,50 @@ interface Props {
 const { category } = Astro.props;
 const tools = toolsInCategory(category.slug);
 
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
+const pct = (n: number) => `${(n * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
+
+/*
+ * One dated fact per card, computed from the tax year rather than typed in.
+ * The rule holds here as everywhere: no page restates a rate, it reads it. A
+ * card that says "nil-rate band £125,000" must become wrong the moment the data
+ * file changes, not stay quietly stale.
+ */
+const sdlt = YEAR.propertyTax['england-nireland'];
+const lbtt = YEAR.propertyTax.scotland;
+const ltt = YEAR.propertyTax.wales;
+
+const FACTS: Record<string, string> = {
+  'take-home-pay-calculator': `Personal allowance ${gbp(YEAR.incomeTax.personalAllowance)}`,
+  'take-home-pay-calculator/scotland': `${YEAR.incomeTax.bands.scotland.length} bands · top rate ${pct(
+    YEAR.incomeTax.bands.scotland[YEAR.incomeTax.bands.scotland.length - 1].rate,
+  )}`,
+  'company-car-tax-calculator': `Electric rate ${pct(YEAR.companyCars.zeroEmissionPercentage)}`,
+  'redundancy-pay-calculator': `Weekly pay cap ${gbp(YEAR.redundancy.weeklyPayCap)}`,
+  'stamp-duty-calculator': `Nil-rate band ${gbp(sdlt.standardBands[0].upTo ?? 0)} · FTB relief to ${gbp(
+    sdlt.firstTimeBuyerRelief?.maximumPrice ?? 0,
+  )}`,
+  'stamp-duty-calculator/scotland': `Nil-rate band ${gbp(lbtt.standardBands[0].upTo ?? 0)} · ADS ${pct(
+    lbtt.additionalProperty.kind === 'flat' ? lbtt.additionalProperty.rate : 0,
+  )}`,
+  'stamp-duty-calculator/wales': `Nil-rate band ${gbp(ltt.standardBands[0].upTo ?? 0)} · no FTB relief`,
+  'capital-gains-tax-property-calculator': `Annual exempt amount ${gbp(
+    YEAR.capitalGains.annualExemptAmount,
+  )}`,
+  'mortgage-overpayment-calculator': 'Most lenders allow 10% a year penalty-free',
+  'mortgage-affordability-calculator': 'Shown as a 4x to 5.5x range, not one number',
+  'sole-trader-vs-limited-company-calculator': `Dividend rate now ${pct(
+    YEAR.incomeTax.dividend.ordinaryRate,
+  )}`,
+  'vat-flat-rate-calculator': `Registration threshold ${gbp(YEAR.vat.registrationThreshold)}`,
+};
+
 // Guides that point at any tool in this category belong on this page too.
 const guides = GUIDES.filter((guide) =>
   guide.relatedTools.some((slug) => tools.some((tool) => tool.slug === slug)),
 );
+
+const others = CATEGORIES.filter((c) => c.slug !== category.slug);
 
 const listSchema = {
   '@context': 'https://schema.org',
@@ -48,50 +88,66 @@ const listSchema = {
       <p class="tool-standfirst">{category.description}</p>
     </div>
 
-    <ul class="card-grid">
-      {
-        tools.map((tool) => (
-          <li>
-            <a class="card" href={`/${tool.slug}/`}>
-              <strong>{tool.h1}</strong>
-              <span>{tool.standfirst}</span>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-
-    <AdSlot format="leaderboard" />
-
-    {
-      guides.length > 0 && (
-        <section class="deferred">
-          <h2>Guides</h2>
-          <ul class="card-grid">
-            {guides.map((guide) => (
+    <div class="tool-body">
+      <div>
+        <ul class="card-grid card-grid-feature">
+          {
+            tools.map((tool) => (
               <li>
-                <a class="card" href={`/guides/${guide.slug}/`}>
-                  <strong>{guide.h1}</strong>
-                  <span>{guide.metaDescription}</span>
+                <a class="card card-feature" href={`/${tool.slug}/`}>
+                  <strong>{tool.h1}</strong>
+                  <span>{tool.standfirst}</span>
+                  {FACTS[tool.slug] && <span class="card-fact">{FACTS[tool.slug]}</span>}
                 </a>
               </li>
-            ))}
-          </ul>
-        </section>
-      )
-    }
+            ))
+          }
+        </ul>
 
-    <section class="prose deferred">
-      <h2>Other calculators</h2>
-      <ul>
+        {/* Zone 1: in-feed, after the tool grid. */}
+        <AdSlot format="leaderboard" />
+
         {
-          CATEGORIES.filter((c) => c.slug !== category.slug).map((other) => (
-            <li>
-              <a href={`/${other.slug}/`}>{other.title}</a> — {other.description}
-            </li>
-          ))
+          guides.length > 0 && (
+            <section class="section deferred" style="padding-top:0">
+              <h2>{category.navTitle} guides</h2>
+              <ul class="card-grid">
+                {guides.map((guide) => (
+                  <li>
+                    <a class="card card-guide" href={`/guides/${guide.slug}/`}>
+                      <strong>{guide.h1}</strong>
+                      <span>{guide.standfirst}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
         }
-      </ul>
-    </section>
+
+        <p class="verified">
+          Tax year {YEAR.label} &middot; <a href="/methodology/">How we calculate</a> &middot;{' '}
+          <a href="/rates/">All rates and sources</a> &middot;
+          <a href="/changelog/">What changed</a>
+        </p>
+      </div>
+
+      <aside class="tool-aside">
+        <nav class="rail-card" aria-label="Other categories">
+          <span class="eyebrow">Other categories</span>
+          {
+            others.map((other) => (
+              <a href={`/${other.slug}/`}>
+                {other.navTitle} &mdash; {toolsInCategory(other.slug).length} tools
+              </a>
+            ))
+          }
+          <a href="/guides/">Guides &mdash; {GUIDES.length} articles</a>
+        </nav>
+
+        {/* Zone 2: sticky rail, desktop only — hidden below 48rem by CSS. */}
+        <AdSlot format="sidebar" />
+      </aside>
+    </div>
   </div>
 </BaseLayout>

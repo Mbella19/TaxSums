@@ -1,12 +1,37 @@
 /*
  * Design tokens and base styles.
  *
- * Deliberately no web fonts: a finance calculator is read, not admired, and a
- * font round-trip is the easiest 200ms to give back. The system stack renders
- * instantly and looks native on every platform.
+ * Implements the TaxSums redesign. Two typefaces: the system sans stack for
+ * anything you read at length, and Newsreader for headings, brand and the
+ * headline figures — a serif gives a finance page the register of a printed
+ * statement rather than a dashboard.
  *
- * Every figure on the site uses tabular numerals so columns of money line up.
+ * Newsreader is self-hosted, not loaded from Google Fonts. The full family is
+ * 196 KB across two files; subset to the characters this site actually emits
+ * and with the optical-size axis pinned, it is 50 KB. Self-hosting also keeps
+ * the promise made on /privacy/ — no request on this site goes to a third
+ * party.
+ *
+ * Every figure uses tabular numerals so columns of money line up.
  */
+
+@font-face {
+  font-family: 'Newsreader';
+  /* Variable across weight, so 400/500/600 all come from this one file. */
+  src: url('/fonts/newsreader-roman.woff2') format('woff2');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Newsreader';
+  /* Used only for guide standfirsts, so a single static cut is enough. */
+  src: url('/fonts/newsreader-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
 
 :root {
   color-scheme: light dark;
@@ -15,60 +40,111 @@
      for long tables, and it stops the page glaring next to an ad unit. */
   --paper: #fbfaf7;
   --paper-raised: #ffffff;
-  --paper-sunken: #f3f1ec;
-  --ink: #14181f;
-  --ink-muted: #5a616e;
-  /* 4.6:1 on --paper, 4.8:1 on white. The lightest grey that still clears
-     WCAG AA for the small-caps labels and hints it is used on. */
-  --ink-faint: #6b7280;
-  --rule: #e2ded5;
-  --rule-strong: #cfcabe;
+  --paper-sunken: #f7f5f0;
+  --paper-deep: #f2efe8;
+
+  --ink: #12161c;
+  --ink-prose: #3a414c;
+  --ink-muted: #565d69;
+  /*
+   * The design specified #79808C for eyebrows and table headers and #A6ABB4 for
+   * ad labels. Measured, those are 3.46:1 and 2.01:1 against the surfaces they
+   * sit on — both below WCAG AA, and both are used at 11–13px where AA applies
+   * in full. Darkened along the same hue until they clear 4.5:1 everywhere they
+   * appear. Visually near-identical; legally and practically not.
+   */
+  --ink-faint: #676d77;
+  --ink-faintest: #676a70;
+
+  --rule: #e5e1d7;
+  --rule-soft: #edeae3;
+  --rule-strong: #cfc9bb;
+  --watermark: #918d83;
 
   /* One accent, used sparingly: results, links, the current nav item. */
   --accent: #14532d;
   --accent-bright: #1d7a44;
-  --accent-wash: #e8f2ec;
+  --accent-wash: #e9f2ec;
+  --accent-wash-rule: #cfe3d6;
+
+  /* The call to action is a brighter green than the accent, so it reads as a
+     button rather than a link that happens to be large. */
+  --cta: #2fa365;
+  --cta-hover: #3cbe78;
+  --cta-ink: #08150e;
+
+  /* The inverted panel: hero "start here", guide call to action. */
+  --panel: #12161c;
+  --panel-ink: #f3f1ec;
+  --panel-muted: #8b94a2;
+  --panel-accent: #8fbfa4;
+  --panel-field: #1d232e;
+  --panel-rule: #333b48;
 
   /* Semantic colours for tax outcomes. */
   --warn: #8a5a00;
-  --warn-wash: #fdf4e3;
+  --warn-wash: #fbf3e2;
   --danger: #9b2c2c;
-  --danger-wash: #fdeeee;
+  --danger-wash: #fbeeee;
+  --selection: #cde8d8;
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
   --measure: 68ch;
-  --page-max: 78rem;
-  --radius: 6px;
-  --shadow-sm: 0 1px 2px rgb(20 24 31 / 0.06), 0 1px 3px rgb(20 24 31 / 0.04);
-  --shadow-md: 0 2px 8px rgb(20 24 31 / 0.07), 0 8px 24px rgb(20 24 31 / 0.05);
+  --page-max: 1180px;
+  --radius: 9px;
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgb(18 22 28 / 0.05), 0 1px 3px rgb(18 22 28 / 0.04);
+  --shadow-card: 0 1px 2px rgb(18 22 28 / 0.05), 0 10px 28px rgb(18 22 28 / 0.045);
+  --shadow-hover: 0 12px 28px rgb(18 22 28 / 0.12);
+  --shadow-hover-sm: 0 8px 20px rgb(18 22 28 / 0.1);
+
+  /* One easing for every lift, so the whole page moves with one hand. */
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
+    /*
+     * The design is light-only. This palette is derived from it: same roles,
+     * same relationships — raised surfaces lighter than the page, sunken ones
+     * darker — with every pair re-checked against WCAG AA.
+     */
     --paper: #10131a;
     --paper-raised: #171b24;
-    --paper-sunken: #0c0f15;
+    --paper-sunken: #0f131a;
+    --paper-deep: #0c0f15;
+
     --ink: #e8eaee;
+    --ink-prose: #c8ced9;
     --ink-muted: #a2aab8;
-    /* 5.1:1 on --paper-raised. */
-    --ink-faint: #848c9a;
+    --ink-faint: #8a93a2;
+    --ink-faintest: #7d8694;
+
     --rule: #262c38;
+    --rule-soft: #1e2430;
     --rule-strong: #38404f;
+    --watermark: #5e6470;
 
     --accent: #6ee7a0;
     --accent-bright: #8df0b8;
     --accent-wash: #12261a;
+    --accent-wash-rule: #1e3d2a;
 
     --warn: #e8b356;
     --warn-wash: #2a2213;
     --danger: #f08a8a;
     --danger-wash: #2b1717;
+    --selection: #1e4d33;
 
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow-md: 0 2px 8px rgb(0 0 0 / 0.45), 0 8px 24px rgb(0 0 0 / 0.35);
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 28px rgb(0 0 0 / 0.3);
+    --shadow-hover: 0 12px 28px rgb(0 0 0 / 0.45);
+    --shadow-hover-sm: 0 8px 20px rgb(0 0 0 / 0.4);
   }
 }
 
@@ -81,6 +157,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  /* The sticky header is 66px; anchored jumps must clear it. */
+  scroll-padding-top: 5rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -101,43 +179,61 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 1.0625rem;
-  line-height: 1.65;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
+  /*
+   * The page body must never scroll sideways. Wide content — tables, long
+   * figures — scrolls inside its own container instead. This is the backstop;
+   * the individual min-width rules below are the actual fixes.
+   */
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-/* Money, percentages, dates — anything that sits in a column. */
-.num,
-td.num,
-th.num,
-table td,
-table th {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum' 1;
+main {
+  flex: 1;
 }
+
+::selection {
+  background: var(--selection);
+}
+
+/* ---------- Type ---------- */
 
 h1,
 h2,
 h3,
 h4 {
-  line-height: 1.2;
-  letter-spacing: -0.021em;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.022em;
   text-wrap: balance;
-  margin: 0 0 0.5em;
-  font-weight: 640;
+  margin: 0 0 0.4em;
+  /* Newsreader carries an optical-size axis; let the browser drive it. */
+  font-optical-sizing: auto;
 }
 
 h1 {
-  font-size: clamp(1.85rem, 1.35rem + 2.1vw, 2.7rem);
+  font-size: clamp(2.06rem, 1.5rem + 2.3vw, 3.06rem);
   letter-spacing: -0.028em;
+  line-height: 1.04;
 }
 h2 {
-  font-size: clamp(1.4rem, 1.2rem + 0.85vw, 1.8rem);
-  margin-top: 2.4em;
+  font-size: clamp(1.5rem, 1.28rem + 0.9vw, 1.94rem);
+  margin-top: 1.8em;
 }
 h3 {
-  font-size: 1.16rem;
-  margin-top: 1.9em;
+  font-size: 1.31rem;
+  letter-spacing: -0.018em;
+  margin-top: 1.6em;
+}
+h4 {
+  font-size: 1.06rem;
 }
 
 p,
@@ -173,6 +269,18 @@ code {
   border-radius: 3px;
 }
 
+/* Small-caps label above a heading or panel. */
+.eyebrow {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.719rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
 /* ---------- Layout ---------- */
 
 .wrap {
@@ -182,17 +290,12 @@ code {
   padding-inline: clamp(1rem, 4vw, 2rem);
 }
 
-/*
- * The page body must never scroll sideways. Wide content — tables, long
- * figures — scrolls inside its own container instead. This is the backstop; the
- * individual min-width rules below are the actual fixes.
- */
-body {
-  overflow-x: hidden;
-}
-
 .prose {
   max-width: var(--measure);
+}
+.prose p,
+.prose li {
+  color: var(--ink-prose);
 }
 
 .skip-link {
@@ -209,23 +312,74 @@ body {
   top: 0.5rem;
 }
 
+/*
+ * A bulleted list where the marker is a dot we draw, so it aligns with the
+ * first line of text rather than the line box.
+ */
+.bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.bullets li {
+  display: flex;
+  gap: 0.8rem;
+  color: var(--ink-prose);
+}
+.bullets li::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--accent);
+  margin-top: 0.65em;
+}
+.bullets.bullets-warn li::before {
+  background: var(--warn);
+}
+.bullets strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+
 /* ---------- Header ---------- */
 
 .site-header {
-  border-bottom: 1px solid var(--rule);
+  position: sticky;
+  top: 0;
+  z-index: 50;
   background: var(--paper-raised);
+  border-bottom: 1px solid var(--rule);
+}
+/*
+ * Below this width the nav wraps to two rows and the search takes a third, so
+ * the header is over 200px tall — a sixth of a phone screen, permanently, if it
+ * stays pinned. It scrolls away instead; the calculator matters more than the
+ * nav does.
+ */
+@media (max-width: 60rem) {
+  .site-header {
+    position: static;
+  }
 }
 .site-header .wrap {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: clamp(0.625rem, 2.2vw, 1.5rem);
   flex-wrap: wrap;
-  padding-block: 0.85rem;
+  padding-block: 0.8rem;
 }
+
 .brand {
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: -0.03em;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1;
   color: var(--ink);
   text-decoration: none;
   white-space: nowrap;
@@ -233,29 +387,128 @@ body {
 .brand span {
   color: var(--accent);
 }
+
+.year-badge {
+  font-size: 0.656rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-wash);
+  border: 1px solid var(--accent-wash-rule);
+  border-radius: 5px;
+  padding: 0.19rem 0.44rem;
+  white-space: nowrap;
+}
+
 .site-nav {
   display: flex;
-  gap: 1.35rem;
+  gap: clamp(0.625rem, 1.6vw, 1.19rem);
   flex-wrap: wrap;
-  font-size: 0.94rem;
+  font-size: 0.938rem;
+  font-weight: 500;
   margin-left: auto;
 }
 .site-nav a {
   color: var(--ink-muted);
   text-decoration: none;
-  font-weight: 500;
 }
 .site-nav a:hover,
 .site-nav a[aria-current='page'] {
   color: var(--accent);
 }
 
+/* Header search. Filters a server-rendered list, so it works before hydration
+   and degrades to a plain list of links with JavaScript off. */
+.site-search {
+  position: relative;
+  flex: 0 1 14.4rem;
+  min-width: 10.6rem;
+}
+.site-search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.56rem;
+  background: var(--paper-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding-inline: 0.75rem;
+  height: 40px;
+}
+.site-search-field:focus-within {
+  border-color: var(--accent-bright);
+}
+.site-search-field svg {
+  flex: none;
+  color: var(--ink-faint);
+}
+.site-search input {
+  border: 0;
+  background: none;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.906rem;
+  color: var(--ink);
+  height: 100%;
+}
+
+.site-search-results {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow: var(--shadow-hover-sm);
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.site-search-results:not([data-open]) {
+  display: none;
+}
+.site-search-results a {
+  display: block;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.906rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.site-search-results a:hover,
+.site-search-results a:focus-visible {
+  background: var(--accent-wash);
+  color: var(--accent);
+}
+.site-search-results li[hidden] {
+  display: none;
+}
+.site-search-empty {
+  padding: 0.5rem 0.6rem;
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+}
+
+@media (max-width: 60rem) {
+  .site-search {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+  }
+}
+
 /* ---------- Breadcrumbs ---------- */
 
 .breadcrumbs {
-  font-size: 0.86rem;
+  font-size: 0.813rem;
   color: var(--ink-faint);
-  padding-block: 1rem 0;
+  padding-block: 0.875rem 0;
 }
 .breadcrumbs ol {
   list-style: none;
@@ -263,11 +516,12 @@ body {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.44rem;
+  align-items: center;
 }
 .breadcrumbs li:not(:last-child)::after {
   content: '/';
-  margin-left: 0.4rem;
+  margin-left: 0.44rem;
   color: var(--rule-strong);
 }
 .breadcrumbs a {
@@ -278,46 +532,376 @@ body {
   text-decoration: underline;
 }
 
-/* ---------- Tool page shell ---------- */
+/* ---------- Buttons ---------- */
 
-.tool-header {
-  padding-block: 1.2rem 1.6rem;
-  max-width: var(--measure);
-}
-.tool-standfirst {
-  font-size: 1.16rem;
-  color: var(--ink-muted);
-  margin-bottom: 0.9rem;
-}
-
-/*
- * A pill radius only reads correctly on a single line. This wraps to three
- * lines on a narrow phone, so use a modest radius that survives wrapping.
- */
-.verified {
+.btn-cta,
+.btn-ghost {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.83rem;
-  line-height: 1.5;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 650;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  border-radius: var(--radius);
+  padding-inline: 1.375rem;
+  min-height: 48px;
+  transition:
+    transform 0.15s var(--ease),
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+.btn-cta {
+  background: var(--cta);
+  color: var(--cta-ink);
+  border: 0;
+}
+.btn-cta:hover {
+  background: var(--cta-hover);
+  color: var(--cta-ink);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgb(47 163 101 / 0.32);
+}
+.btn-cta:active {
+  transform: translateY(0) scale(0.985);
+  box-shadow: 0 2px 8px rgb(47 163 101 / 0.28);
+}
+.btn-ghost {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  font-size: 0.938rem;
+}
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+.btn-row {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--rule);
+}
+.hero .wrap {
+  display: flex;
+  gap: clamp(1.75rem, 4vw, 3.5rem);
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding-block: clamp(2.25rem, 5vw, 4rem) clamp(1.875rem, 4vw, 3.25rem);
+}
+.hero-copy {
+  flex: 1 1 30rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+.hero-copy h1 {
+  font-size: clamp(2.375rem, 4.6vw, 3.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+.hero-lede {
+  font-size: clamp(1.063rem, 1.5vw, 1.281rem);
   color: var(--ink-muted);
+  max-width: 56ch;
+  margin: 0;
+}
+
+.chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.813rem;
+  color: var(--ink-muted);
+}
+.chips li {
   background: var(--paper-sunken);
   border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  padding: 0.4rem 0.8rem;
+  border-radius: 99px;
+  padding: 0.31rem 0.75rem;
 }
-.verified strong {
-  color: var(--ink);
+
+/* The inverted "start here" panel. */
+.start-panel {
+  flex: 0 1 23.75rem;
+  min-width: 17.5rem;
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.25rem, 2.6vw, 1.75rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  color: var(--panel-ink);
+}
+.start-panel .eyebrow {
+  color: var(--panel-accent);
+}
+.start-panel h2 {
+  font-size: 1.563rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--panel-ink);
+}
+.start-panel p {
+  font-size: 0.781rem;
+  color: var(--panel-muted);
+  margin: 0;
+}
+.start-field {
+  display: flex;
+  align-items: center;
+  background: var(--panel-field);
+  border: 1px solid var(--panel-rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-height: 52px;
+}
+.start-field span {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  padding-inline: 0.875rem;
+  color: var(--panel-muted);
+  font-size: 1.188rem;
+  border-right: 1px solid var(--panel-rule);
+}
+.start-field input {
+  border: 0;
+  background: none;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+  padding-inline: 0.875rem;
+  font: inherit;
+  font-size: 1.25rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--panel-ink);
+  /* Strip spinners — they encourage clicking rather than typing a salary. */
+  appearance: textfield;
+}
+.start-field input::-webkit-outer-spin-button,
+.start-field input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.start-field:focus-within {
+  border-color: var(--cta);
+}
+
+/* ---------- Sections ---------- */
+
+.section {
+  padding-top: clamp(2.125rem, 4vw, 3.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+.section > h2 {
+  margin: 0;
+  font-size: clamp(1.563rem, 2.4vw, 2.063rem);
+}
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.section-head h2 {
+  margin: 0;
+  font-size: clamp(1.563rem, 2.4vw, 2.063rem);
+}
+.section-head a {
+  font-size: 0.906rem;
+  font-weight: 500;
+}
+.section-intro {
+  font-size: 1rem;
+  color: var(--ink-muted);
+  max-width: 64ch;
+  margin: 0;
+}
+
+/* ---------- Cards ---------- */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: 0.7rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.card-grid > li {
+  display: flex;
+  min-width: 0;
+}
+/* Feature cards are wider and fill the row rather than leaving a ragged edge. */
+.card-grid-feature {
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 0.875rem;
+}
+.card-grid-compact {
+  grid-template-columns: repeat(auto-fill, minmax(13.125rem, 1fr));
+  gap: 0.56rem;
+}
+
+.card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.31rem;
+  min-width: 0;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.94rem 1.06rem;
+  text-decoration: none;
+  color: var(--ink);
+  transition:
+    transform 0.18s var(--ease),
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-hover-sm);
+  color: var(--ink);
+}
+.card:active {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.card strong {
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.012em;
+}
+.card span {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+/* A dated fact pinned to the bottom of the card, below a hairline. */
+.card .card-fact {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--rule-soft);
+  font-size: 0.844rem;
+  color: var(--ink-faint);
+}
+.card .card-fact strong {
+  color: var(--ink);
+  font-weight: 650;
+  font-size: inherit;
+}
+
+.card-feature {
+  gap: 0.56rem;
+  padding: 1.375rem;
+  border-radius: 11px;
+}
+.card-feature:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+.card-feature strong {
+  font-family: var(--font-serif);
+  font-size: 1.438rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.card-feature span {
+  font-size: 0.938rem;
+}
+
+.card-guide strong {
+  font-family: var(--font-serif);
+  font-size: 1.188rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.22;
+}
+
+/* A card that is only a name — the "all 12 calculators" grid. */
+.card-plain {
+  display: block;
+  padding: 0.81rem 0.94rem;
+  border-radius: 8px;
+  font-size: 0.938rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+.card-plain:hover {
+  transform: translateY(-2px);
+  color: var(--accent);
+}
+
+/* ---------- Page shell: main + sticky rail ---------- */
+
+.tool-header {
+  padding-block: 1.25rem 0.5rem;
+  max-width: 48.75rem;
+}
+.tool-header h1 {
+  margin-bottom: 0.5rem;
+}
+.tool-standfirst {
+  font-size: clamp(1.063rem, 1.4vw, 1.25rem);
+  color: var(--ink-muted);
+  margin-bottom: 0.8rem;
+}
+
+/* Provenance chips under the H1. */
+.tool-chips {
+  display: flex;
+  gap: 0.44rem;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  font-size: 0.781rem;
+  color: var(--ink-muted);
+}
+.tool-chips li {
+  background: var(--paper-sunken);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: 0.31rem 0.63rem;
+}
+.tool-chips strong {
+  color: var(--ink);
+  font-weight: 650;
 }
 
 .tool-body {
-  display: grid;
-  gap: clamp(1.5rem, 4vw, 3rem);
-  align-items: start;
-  padding-bottom: 4rem;
+  display: flex;
+  gap: clamp(1.375rem, 3vw, 2.75rem);
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding-block: 1.375rem 3.75rem;
 }
-
 /*
  * Grid and flex children default to `min-width: auto`, which means they refuse
  * to shrink below their content's intrinsic width. A number input carries a
@@ -327,14 +911,77 @@ body {
 .tool-body > * {
   min-width: 0;
 }
+.tool-body > div:first-child,
+.tool-body > article {
+  flex: 1 1 35rem;
+  min-width: 0;
+}
+
+.tool-aside {
+  flex: 1 1 18.25rem;
+  max-width: 21.25rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
 @media (min-width: 62rem) {
-  .tool-body {
-    grid-template-columns: minmax(0, 1fr) 300px;
-  }
   .tool-aside {
     position: sticky;
-    top: 1.5rem;
+    /* Clears the sticky header. */
+    top: 4.125rem;
   }
+}
+
+/* Sidebar cards. */
+.rail-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 1rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.56rem;
+}
+.rail-card a {
+  font-size: 0.906rem;
+  text-decoration: none;
+  color: var(--ink-prose);
+}
+.rail-card a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.rail-card p {
+  font-size: 0.906rem;
+  color: var(--ink-muted);
+  margin: 0;
+}
+.rail-card dl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.44rem;
+  font-size: 0.875rem;
+  margin: 0;
+}
+.rail-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.rail-card dt {
+  color: var(--ink-muted);
+}
+.rail-card dd {
+  margin: 0;
+  font-weight: 650;
+}
+.rail-note {
+  font-size: 0.813rem;
+  color: var(--ink-faint);
+  padding-top: 0.56rem;
+  border-top: 1px solid var(--rule-soft);
+  margin: 0;
 }
 
 /* ---------- Calculator ---------- */
@@ -342,14 +989,29 @@ body {
 .calc {
   background: var(--paper-raised);
   border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
+  /*
+   * Inputs and the answer sit side by side once there is room for both, so the
+   * result is visible without scrolling and the reader can see a figure change
+   * as they type. Below ~54rem they stack, inputs first.
+   */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
 }
+.calc > * {
+  min-width: 0;
+}
+
 .calc-inputs {
+  flex: 1 1 20.6rem;
+  min-width: 0;
   display: grid;
   gap: 1.05rem 1.25rem;
-  padding: clamp(1.1rem, 3vw, 1.6rem);
+  align-content: start;
+  padding: clamp(1.06rem, 2.3vw, 1.63rem);
 }
 .calc-inputs > * {
   min-width: 0;
@@ -362,6 +1024,20 @@ body {
     grid-column: 1 / -1;
   }
 }
+/*
+ * Once the result sits beside the inputs the input column is too narrow for
+ * two fields abreast, so it goes back to one.
+ */
+@media (min-width: 54rem) {
+  .calc-inputs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (min-width: 78rem) {
+  .calc-inputs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 
 .field {
   display: flex;
@@ -371,12 +1047,13 @@ body {
 }
 .field label,
 .fieldset-label {
-  font-size: 0.87rem;
-  font-weight: 600;
+  font-size: 0.844rem;
+  font-weight: 650;
   color: var(--ink);
 }
-.field .hint {
-  font-size: 0.79rem;
+.field .hint,
+fieldset .hint {
+  font-size: 0.781rem;
   color: var(--ink-faint);
   line-height: 1.45;
 }
@@ -391,7 +1068,7 @@ body {
   font-variant-numeric: tabular-nums;
   padding: 0.6rem 0.7rem;
   border: 1px solid var(--rule-strong);
-  border-radius: var(--radius);
+  border-radius: 8px;
   background: var(--paper);
   color: var(--ink);
   /* 44px is the minimum comfortable touch target. */
@@ -418,13 +1095,10 @@ body {
   align-items: stretch;
   min-width: 0;
   border: 1px solid var(--rule-strong);
-  border-radius: var(--radius);
+  border-radius: 8px;
   background: var(--paper);
   overflow: hidden;
-}
-.prefixed input {
-  min-width: 0;
-  flex: 1 1 auto;
+  min-height: 44px;
 }
 .prefixed:focus-within {
   border-color: var(--accent-bright);
@@ -434,17 +1108,20 @@ body {
 .prefixed span {
   display: grid;
   place-items: center;
-  padding-inline: 0.7rem;
-  background: var(--paper-sunken);
+  padding-inline: 0.8rem;
+  background: var(--paper-deep);
   border-right: 1px solid var(--rule);
   color: var(--ink-muted);
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 .prefixed input {
+  min-width: 0;
+  flex: 1 1 auto;
   border: 0 !important;
   border-radius: 0 !important;
   outline: none !important;
   background: transparent !important;
+  font-weight: 600;
 }
 
 fieldset {
@@ -452,12 +1129,14 @@ fieldset {
   padding: 0;
   margin: 0;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
 }
 .choices {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.35rem;
+  gap: 0.38rem;
 }
 /*
  * The label is the tap target, not the radio inside it — clicking anywhere on
@@ -467,20 +1146,37 @@ fieldset {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.88rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  padding: 0.42rem 0.7rem;
+  padding-inline: 0.8rem;
+  min-height: 44px;
   border: 1px solid var(--rule-strong);
-  border-radius: var(--radius);
+  border-radius: 8px;
   cursor: pointer;
   background: var(--paper);
-  min-height: 44px;
+  color: var(--ink-prose);
+  transition:
+    transform 0.13s var(--ease),
+    background 0.13s ease,
+    border-color 0.13s ease,
+    color 0.13s ease;
+}
+.choices label:hover {
+  border-color: var(--accent);
+  background: var(--paper-raised);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+.choices label:active {
+  transform: scale(0.96);
+  background: var(--accent-wash);
 }
 .choices label:has(input:checked) {
   border-color: var(--accent);
   background: var(--accent-wash);
   color: var(--accent);
-  font-weight: 600;
+  font-weight: 650;
+  transform: none;
 }
 .choices input {
   accent-color: var(--accent);
@@ -490,58 +1186,191 @@ fieldset {
 /* ---------- Results ---------- */
 
 .calc-result {
-  border-top: 1px solid var(--rule);
-  background: var(--paper-sunken);
-  padding: clamp(1.1rem, 3vw, 1.6rem);
+  flex: 1 1 20rem;
+  min-width: 0;
+  background: var(--paper-deep);
+  padding: clamp(1.06rem, 2.3vw, 1.63rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.06rem;
 }
+/* Stacked: the result needs a rule to separate it. Side by side: a border. */
+@media (max-width: 53.999rem) {
+  .calc-result {
+    border-top: 1px solid var(--rule);
+  }
+}
+@media (min-width: 54rem) {
+  .calc-result {
+    border-left: 1px solid var(--rule);
+  }
+}
+
+/*
+ * The working — band tables and long callouts — sits on its own full-width row
+ * beneath both panes. Four columns of figures inside a 20rem column is
+ * unreadable, and the answer is what belongs next to the inputs.
+ */
+.calc-detail {
+  flex: 1 1 100%;
+  min-width: 0;
+  padding: clamp(1.06rem, 2.3vw, 1.63rem);
+  border-top: 1px solid var(--rule);
+  background: var(--paper-raised);
+}
+.calc-detail > :last-child {
+  margin-bottom: 0;
+}
+
+/*
+ * Safety net for any calculator whose result still holds a table — one does,
+ * because its whole result is inside a conditional and cannot be split. Those
+ * fall back to the stacked layout rather than squeezing a table into a column.
+ */
+@media (min-width: 54rem) {
+  .calc:has(.calc-result .table-scroll) .calc-inputs,
+  .calc:has(.calc-result .table-scroll) .calc-result {
+    flex-basis: 100%;
+  }
+  .calc:has(.calc-result .table-scroll) .calc-result {
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+  }
+}
+
 .headline-figure {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.5rem 1.1rem;
-  margin-bottom: 1.1rem;
+  gap: 0.3rem 0.63rem;
+  margin: 0;
 }
 .headline-figure .amount {
-  font-size: clamp(2rem, 1.4rem + 2.6vw, 3rem);
-  font-weight: 680;
-  letter-spacing: -0.033em;
-  line-height: 1;
+  font-family: var(--font-serif);
+  font-size: clamp(2.875rem, 5.2vw, 4rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 .headline-figure .caption {
-  font-size: 0.94rem;
+  font-size: 1rem;
   color: var(--ink-muted);
+}
+/* A supporting line under the headline: "£35,920 a year · £691 a week". */
+.headline-sub {
+  flex: 1 0 100%;
+  font-size: 0.969rem;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+/*
+ * Where the money went, as one bar. Shows proportion at a glance in a way a
+ * column of figures cannot, and it is the only chart on the site — built from
+ * divs, so it costs nothing and prints correctly.
+ */
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.56rem;
+}
+.breakdown-bar {
+  display: flex;
+  height: 11px;
+  border-radius: 99px;
+  overflow: hidden;
+  background: var(--rule);
+}
+.breakdown-bar span {
+  display: block;
+  min-width: 0;
+}
+.breakdown-legend {
+  display: flex;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.781rem;
+  color: var(--ink-muted);
+}
+.breakdown-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+.breakdown-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  flex: none;
 }
 
 .figure-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-  gap: 0.9rem;
-  margin-bottom: 1.2rem;
+  grid-template-columns: repeat(auto-fit, minmax(7.4rem, 1fr));
+  gap: 0.56rem;
+  margin: 0;
 }
 .figure-row div {
   background: var(--paper-raised);
   border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  padding: 0.7rem 0.85rem;
+  border-radius: 8px;
+  padding: 0.69rem 0.81rem;
+  min-width: 0;
 }
 .figure-row dt,
 .figure-row .label {
-  font-size: 0.76rem;
+  font-size: 0.688rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.07em;
   color: var(--ink-faint);
-  font-weight: 600;
-  margin-bottom: 0.15rem;
+  font-weight: 700;
+  margin-bottom: 0.13rem;
 }
 .figure-row dd,
 .figure-row .value {
   margin: 0;
-  font-size: 1.22rem;
-  font-weight: 640;
+  font-size: 1.25rem;
+  font-weight: 650;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
+}
+
+.result-actions {
+  display: flex;
+  gap: 0.56rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: auto;
+}
+.result-actions button,
+.result-actions a {
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.result-actions button {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: 8px;
+  padding-inline: 0.875rem;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.result-actions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* ---------- Tables ---------- */
@@ -556,41 +1385,53 @@ fieldset {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.92rem;
+  font-size: 0.906rem;
 }
 caption {
   text-align: left;
-  padding: 0.75rem 0.9rem;
-  font-size: 0.84rem;
+  padding: 0.69rem 0.875rem;
+  font-size: 0.813rem;
   color: var(--ink-muted);
   border-bottom: 1px solid var(--rule);
 }
 th,
 td {
-  padding: 0.6rem 0.9rem;
+  padding: 0.69rem 0.875rem;
   text-align: left;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule-soft);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 thead th {
-  font-size: 0.77rem;
+  font-size: 0.719rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--ink-faint);
-  font-weight: 650;
+  font-weight: 700;
   background: var(--paper-sunken);
+  border-bottom: 1px solid var(--rule);
 }
 td:not(:first-child),
 th:not(:first-child) {
   text-align: right;
 }
+/* A wrapping prose column, e.g. "who it applies to". */
+td.wrap-cell,
+th.wrap-cell {
+  white-space: normal;
+  text-align: left;
+  color: var(--ink-muted);
+  font-size: 0.844rem;
+  min-width: 14rem;
+}
 tbody tr:last-child td {
   border-bottom: 0;
 }
 tfoot td {
-  font-weight: 660;
+  font-weight: 650;
   background: var(--paper-sunken);
   border-top: 2px solid var(--rule-strong);
+  border-bottom: 0;
 }
 
 /* ---------- Callouts ---------- */
@@ -600,15 +1441,20 @@ tfoot td {
 .danger {
   border-left: 3px solid var(--accent);
   background: var(--accent-wash);
-  padding: 0.85rem 1.05rem;
+  padding: 0.94rem 1.13rem;
   border-radius: 0 var(--radius) var(--radius) 0;
   margin-bottom: 1.2rem;
-  font-size: 0.95rem;
+  font-size: 0.969rem;
 }
 .note > :last-child,
 .warning > :last-child,
 .danger > :last-child {
   margin-bottom: 0;
+}
+.note p,
+.warning p,
+.danger p {
+  color: var(--ink-prose);
 }
 .warning {
   border-left-color: var(--warn);
@@ -623,78 +1469,145 @@ tfoot td {
 .danger strong:first-child {
   display: block;
   margin-bottom: 0.15rem;
+  font-weight: 650;
 }
 
 /* ---------- FAQ ---------- */
 
 .faq details {
   border-bottom: 1px solid var(--rule);
-  padding: 0.15rem 0;
 }
 .faq summary {
   cursor: pointer;
-  padding: 0.85rem 0;
+  padding: 0.94rem 0;
   font-weight: 600;
+  font-size: 1.031rem;
   list-style: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+  text-wrap: pretty;
 }
 .faq summary::-webkit-details-marker {
   display: none;
 }
 .faq summary::after {
   content: '+';
-  color: var(--ink-faint);
+  color: var(--ink-faintest);
   font-weight: 400;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   line-height: 1;
+  flex: none;
 }
 .faq details[open] summary::after {
   content: '\2212';
 }
 .faq details > :not(summary) {
-  padding-bottom: 0.4rem;
+  padding-bottom: 0.94rem;
+  margin-bottom: 0;
   color: var(--ink-muted);
+  font-size: 1rem;
   max-width: var(--measure);
 }
 
-/* ---------- Related links ---------- */
+/* ---------- Guides ---------- */
 
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 0.85rem;
-  padding: 0;
-  margin: 0 0 1.5rem;
-  list-style: none;
+.guide-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
 }
-.card {
-  display: block;
-  padding: 0.95rem 1.05rem;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--paper-raised);
-  text-decoration: none;
-  color: var(--ink);
-  height: 100%;
+.guide-header h1 {
+  margin: 0;
+  font-size: clamp(2.125rem, 3.9vw, 3.25rem);
+  line-height: 1.03;
+  letter-spacing: -0.03em;
 }
-.card:hover {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-sm);
-  color: var(--ink);
-}
-.card strong {
-  display: block;
-  color: var(--accent);
-  margin-bottom: 0.2rem;
-  font-size: 0.98rem;
-}
-.card span {
-  font-size: 0.87rem;
+.guide-standfirst {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.188rem, 1.6vw, 1.438rem);
   color: var(--ink-muted);
-  line-height: 1.45;
+  line-height: 1.4;
+  margin: 0;
+}
+.guide-meta {
+  font-size: 0.844rem;
+  color: var(--ink-faint);
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--rule);
+  margin: 0;
+}
+
+/* The "in short" summary box at the top of a guide. */
+.in-short {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 11px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.69rem;
+  margin-bottom: 1.4rem;
+}
+.in-short .bullets {
+  margin: 0;
+}
+
+/* Inverted call-to-action panel inside an article. */
+.cta-panel {
+  background: var(--panel);
+  border-radius: 11px;
+  padding: 1.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  color: var(--panel-ink);
+  margin-bottom: 1.4rem;
+}
+.cta-panel .eyebrow {
+  color: var(--panel-accent);
+}
+.cta-panel h2,
+.cta-panel h3 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--panel-ink);
+}
+.cta-panel p {
+  font-size: 0.938rem;
+  color: var(--panel-muted);
+  margin: 0;
+}
+.cta-panel .btn-cta {
+  align-self: flex-start;
+  font-size: 0.969rem;
+}
+
+/* ---------- Provenance line ---------- */
+
+/*
+ * A pill radius only reads correctly on a single line. This wraps to three
+ * lines on a narrow phone, so use a modest radius that survives wrapping.
+ */
+.verified {
+  display: block;
+  font-size: 0.844rem;
+  line-height: 1.5;
+  color: var(--ink-faint);
+  background: var(--paper-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.69rem 0.875rem;
+  margin: 1.4rem 0 0;
+}
+.verified strong {
+  color: var(--ink);
+  font-weight: 650;
 }
 
 /* ---------- Ad slots ---------- */
@@ -702,22 +1615,43 @@ tfoot td {
 /*
  * Reserved space, always. The container holds its height whether or not an ad
  * is ever served, so turning AdSense on later cannot move the page.
+ *
+ * Every unit is labelled. That is an AdSense policy requirement, and on a page
+ * of financial figures it is the difference between an advert and something a
+ * reader might mistake for part of a calculation.
  */
+.ad {
+  margin-block: clamp(1.63rem, 3vw, 2.38rem);
+}
+.tool-aside .ad,
+.ad:first-child {
+  margin-block: 0;
+}
+.ad-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-faintest);
+  margin-bottom: 0.44rem;
+}
 .ad-slot {
   display: grid;
   place-items: center;
-  margin: 1.75rem 0;
-  background: var(--paper-sunken);
-  border: 1px dashed var(--rule-strong);
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
   border-radius: var(--radius);
-  color: var(--ink-faint);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  padding: 1rem;
+  text-align: center;
   overflow: hidden;
 }
+.ad-slot span {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}
 .ad-slot[data-format='leaderboard'] {
-  min-height: 100px;
+  min-height: 250px;
 }
 .ad-slot[data-format='rectangle'] {
   min-height: 280px;
@@ -726,9 +1660,83 @@ tfoot td {
   min-height: 600px;
 }
 @media (max-width: 48rem) {
+  .ad-slot[data-format='leaderboard'],
   .ad-slot[data-format='sidebar'] {
     min-height: 280px;
   }
+}
+
+/*
+ * Mobile anchor unit. Sticky rather than fixed, so it participates in layout
+ * and cannot cover the last line of a page. Dismissible, because an advert you
+ * cannot get rid of on a small screen is a bad experience regardless of policy.
+ */
+.ad-anchor {
+  position: sticky;
+  bottom: 0;
+  z-index: 40;
+  background: var(--paper-sunken);
+  border-top: 1px solid var(--rule-strong);
+  padding: 0.38rem 0.63rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  box-shadow: 0 -6px 18px rgb(18 22 28 / 0.07);
+}
+.ad-anchor[hidden] {
+  display: none;
+}
+.ad-anchor-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+.ad-anchor .ad-label {
+  margin: 0;
+  font-size: 0.594rem;
+}
+.ad-anchor button {
+  background: none;
+  border: 0;
+  color: var(--ink-faint);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+.ad-anchor .ad-slot {
+  min-height: 50px;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--paper-deep);
+}
+@media (min-width: 48rem) {
+  .ad-anchor {
+    display: none;
+  }
+}
+
+/* ---------- 404 ---------- */
+
+.error-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.63rem;
+  padding-block: clamp(3rem, 7vw, 6rem);
+}
+.error-code {
+  font-family: var(--font-serif);
+  font-size: clamp(3.5rem, 8vw, 6rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  /*
+   * Meant to read as a watermark, but it is still text at 96px, so it has to
+   * clear 3:1 — the WCAG threshold for large text. The design's rule colour was
+   * 1.58:1. This is the faintest value that still passes.
+   */
+  color: var(--watermark);
 }
 
 /* ---------- Footer ---------- */
@@ -736,57 +1744,62 @@ tfoot td {
 .site-footer {
   border-top: 1px solid var(--rule);
   background: var(--paper-raised);
-  padding-block: 2.5rem 3rem;
-  font-size: 0.9rem;
+  padding-block: clamp(2.13rem, 4vw, 3.25rem) clamp(1.75rem, 3.5vw, 2.75rem);
+  font-size: 0.906rem;
   color: var(--ink-muted);
   margin-top: auto;
 }
 .footer-cols {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: 1.75rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(9.875rem, 1fr));
+  gap: 1.63rem;
+  margin-bottom: 1.63rem;
 }
 .footer-cols h2 {
-  font-size: 0.77rem;
+  font-family: var(--font-sans);
+  font-size: 0.688rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.13em;
   color: var(--ink-faint);
-  margin: 0 0 0.6rem;
+  margin: 0 0 0.56rem;
 }
 .footer-cols ul {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.38rem;
+  gap: 0.56rem;
 }
 .footer-cols a {
   color: var(--ink-muted);
   text-decoration: none;
+  font-size: 0.906rem;
 }
 .footer-cols a:hover {
   color: var(--accent);
   text-decoration: underline;
 }
 .footer-legal {
-  border-top: 1px solid var(--rule);
-  padding-top: 1.5rem;
-  font-size: 0.83rem;
-  max-width: var(--measure);
+  border-top: 1px solid var(--rule-soft);
+  padding-top: 1.25rem;
+  font-size: 0.844rem;
+  max-width: 78ch;
+}
+.footer-legal p {
+  margin-bottom: 0.56rem;
+}
+.footer-legal p:last-child {
+  margin-bottom: 0;
+  color: var(--ink-faint);
+}
+.footer-legal strong {
+  color: var(--ink);
+  font-weight: 650;
 }
 
 /* Long pages of tables and FAQs: skip offscreen layout work. */
 .deferred {
   content-visibility: auto;
   contain-intrinsic-size: auto 600px;
-}
-
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-main {
-  flex: 1;
 }

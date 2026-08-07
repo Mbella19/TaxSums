@@ -300,6 +300,12 @@ export interface Guide {
   readonly h1: string;
   readonly metaDescription: string;
   readonly shortName: string;
+  /** Subject label shown above the H1, e.g. "Income tax". */
+  readonly topic: string;
+  /** The one-sentence promise under the H1, set in italic serif. */
+  readonly standfirst: string;
+  /** Rough reading time in minutes, shown in the byline. */
+  readonly readingMinutes: number;
   readonly relatedTools: readonly string[];
 }
 
@@ -311,6 +317,10 @@ export const GUIDES: readonly Guide[] = [
     metaDescription:
       'Every income tax rate, band and allowance for the 2026/27 tax year, for England, Wales, Northern Ireland and Scotland, with National Insurance and dividend rates.',
     shortName: 'Income tax rates 2026/27',
+    topic: 'Income tax',
+    standfirst:
+      'Every rate, band and allowance for all four nations, in one place and dated to the day it was checked.',
+    readingMinutes: 7,
     relatedTools: ['take-home-pay-calculator', 'take-home-pay-calculator/scotland'],
   },
   {
@@ -320,6 +330,10 @@ export const GUIDES: readonly Guide[] = [
     metaDescription:
       'How Scotland’s six income tax bands compare with the three used elsewhere in the UK in 2026/27, and at what salary a Scottish taxpayer starts paying more.',
     shortName: 'Scotland vs rUK tax',
+    topic: 'Income tax',
+    standfirst:
+      'Six bands instead of three, and a crossover point most Scottish taxpayers have never been shown.',
+    readingMinutes: 6,
     relatedTools: ['take-home-pay-calculator/scotland', 'take-home-pay-calculator'],
   },
   {
@@ -329,6 +343,10 @@ export const GUIDES: readonly Guide[] = [
     metaDescription:
       'The 2026/27 repayment threshold and rate for every UK student loan plan, which plan you are on, and how a postgraduate loan stacks on top of an undergraduate one.',
     shortName: 'Student loan thresholds',
+    topic: 'Student loans',
+    standfirst:
+      'Which plan you are on, what you actually repay, and why a postgraduate loan is added to an undergraduate one rather than replacing it.',
+    readingMinutes: 5,
     relatedTools: ['take-home-pay-calculator'],
   },
   {
@@ -338,6 +356,10 @@ export const GUIDES: readonly Guide[] = [
     metaDescription:
       'How pension salary sacrifice saves National Insurance as well as income tax, how it differs from net pay and relief at source, and the £2,000 cap announced for April 2029.',
     shortName: 'Salary sacrifice',
+    topic: 'Pensions',
+    standfirst:
+      'The only pension arrangement that saves National Insurance as well as income tax — and the £2,000 cap arriving in April 2029.',
+    readingMinutes: 6,
     relatedTools: ['take-home-pay-calculator'],
   },
   {
@@ -347,6 +369,10 @@ export const GUIDES: readonly Guide[] = [
     metaDescription:
       'Why earnings between £100,000 and £125,140 are effectively taxed at 60%, how the personal allowance taper causes it, and how a pension contribution escapes it.',
     shortName: 'The £100k trap',
+    topic: 'Income tax',
+    standfirst:
+      'Between £100,000 and £125,140 you pay an effective 60% on every extra pound — and almost nobody is told.',
+    readingMinutes: 6,
     relatedTools: ['take-home-pay-calculator'],
   },
   {
@@ -356,6 +382,10 @@ export const GUIDES: readonly Guide[] = [
     metaDescription:
       'First-time buyer stamp duty relief disappears completely above £500,000 rather than tapering, so one extra pound on the price can cost £5,000 in tax.',
     shortName: 'The £500k FTB cliff',
+    topic: 'Stamp duty',
+    standfirst:
+      'The relief does not taper — it vanishes. At £500,000 you pay £10,000; at £500,001 you pay £15,000.',
+    readingMinutes: 5,
     relatedTools: ['stamp-duty-calculator', 'stamp-duty-calculator/scotland'],
   },
   {
@@ -365,6 +395,10 @@ export const GUIDES: readonly Guide[] = [
     metaDescription:
       'The 2026/27 dividend rise and 15% employer National Insurance have changed the answer. When a limited company still pays, and when staying a sole trader is cheaper.',
     shortName: 'Should I go limited?',
+    topic: 'Business tax',
+    standfirst:
+      'The dividend rise and 15% employer National Insurance changed the answer for 2026/27. Here are the numbers, not the folklore.',
+    readingMinutes: 8,
     relatedTools: ['sole-trader-vs-limited-company-calculator', 'vat-flat-rate-calculator'],
   },
   {
@@ -374,6 +408,10 @@ export const GUIDES: readonly Guide[] = [
     metaDescription:
       'The £30,000 exemption covers redundancy pay but not notice pay or holiday pay, and it is one £30,000 across the whole package — not per payment.',
     shortName: 'Is redundancy pay taxable?',
+    topic: 'Redundancy',
+    standfirst:
+      'The £30,000 exemption covers less than most people expect, and it is one allowance across the whole package — not one per payment.',
+    readingMinutes: 5,
     relatedTools: ['redundancy-pay-calculator', 'take-home-pay-calculator'],
   },
 ];

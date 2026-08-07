@@ -17,7 +17,7 @@ if (!source) {
 
 const verified = new Date(source.verifiedOn).toLocaleDateString('en-GB', {
   day: 'numeric',
-  month: 'long',
+  month: 'short',
   year: 'numeric',
 });
 ---
@@ -27,11 +27,15 @@ const verified = new Date(source.verifiedOn).toLocaleDateString('en-GB', {
    * Shown on every tool and guide. Money content is held to a higher standard
    * by Google and by readers, and "here is the figure, here is where it came
    * from, here is when we last checked" is the cheapest way to earn both.
+   *
+   * As chips rather than a sentence so it sits directly under the H1 without
+   * competing with the standfirst for attention.
    */
 }
-<p class="verified">
-  <span>
-    Rates for <strong>{CURRENT_TAX_YEAR.label}</strong>, verified {verified} against
-    <a href={source.url} rel="nofollow noopener" target="_blank">{source.title}</a>
-  </span>
-</p>
+<ul class="tool-chips">
+  <li>Rates verified <strong>{verified}</strong></li>
+  <li>
+    Source: <a href={source.url} rel="nofollow noopener" target="_blank">{source.title}</a>
+  </li>
+  <li>Nothing leaves your browser</li>
+</ul>

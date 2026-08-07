@@ -5,7 +5,16 @@ import {
   marginalExtractionRates,
   optimalDirectorSalary,
 } from '../../lib/incorporation';
-import { ChoiceGroup, FigureRow, gbp, Headline, MoneyInput, pct, useUrlState } from './ui';
+import {
+  ChoiceGroup,
+  FigureRow,
+  gbp,
+  Headline,
+  MoneyInput,
+  pct,
+  ResultActions,
+  useUrlState,
+} from './ui';
 
 export default function IncorporationCalculator() {
   const [state, update] = useUrlState({
@@ -160,6 +169,11 @@ export default function IncorporationCalculator() {
           </p>
         )}
 
+
+        <ResultActions />
+      </div>
+
+      <div class="calc-detail">
         <div class="table-scroll">
           <table>
             <caption>Side by side on {gbp(state.profit)} of profit</caption>

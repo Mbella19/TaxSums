@@ -2,44 +2,148 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AdSlot from '../components/AdSlot.astro';
 import { SITE } from '../config';
-import { CATEGORIES, GUIDES, TOOLS, toolsInCategory } from '../data/site';
+import { CATEGORIES, GUIDES, TOOLS, toolBySlug, toolsInCategory } from '../data/site';
 import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
+import { calculateTakeHome } from '../lib/take-home';
 
-const gbp = (n: number) => `£${n.toLocaleString('en-GB')}`;
+const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
 const pct = (n: number) => `${(n * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
 
 const title = `UK Tax Calculators ${YEAR.label} – Take-Home Pay, Stamp Duty and More`;
 const description = SITE.description;
+
+/*
+ * The teaser figures on the feature cards run through the real engine at build
+ * time rather than being typed in. A hard-coded "£2,993 a month" would be wrong
+ * the day a rate changes, and wrong on the homepage is worse than wrong
+ * anywhere else — it is the first number a reader ever sees from us.
+ */
+const SAMPLE_SALARY = 45_000;
+const sample = calculateTakeHome(
+  {
+    grossSalary: SAMPLE_SALARY,
+    region: 'england-nireland',
+    pension: { method: 'none', kind: 'percent', value: 0 },
+    studentLoanPlans: [],
+  },
+  YEAR,
+);
+
+const sdltNilRate = YEAR.propertyTax['england-nireland'].standardBands[0].upTo ?? 0;
+
+const featured = [
+  {
+    tool: toolBySlug('take-home-pay-calculator'),
+    category: 'Salary & tax',
+    factLabel: `On ${gbp(SAMPLE_SALARY)} you keep`,
+    factValue: `${gbp(sample.takeHomeMonthly)} a month`,
+  },
+  {
+    tool: toolBySlug('stamp-duty-calculator'),
+    category: 'Property',
+    factLabel: 'Nil-rate band',
+    factValue: gbp(sdltNilRate),
+  },
+  {
+    tool: toolBySlug('sole-trader-vs-limited-company-calculator'),
+    category: 'Business',
+    factLabel: 'Dividend rate now',
+    factValue: pct(YEAR.incomeTax.dividend.ordinaryRate),
+  },
+];
 ---
 
 <BaseLayout title={title} description={description}>
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="eyebrow">{YEAR.label} tax year &middot; verified 7 August 2026</span>
+        <h1>Free UK tax calculators for the {YEAR.label} tax year</h1>
+        <p class="hero-lede">
+          {TOOLS.length} calculators covering income tax, National Insurance, stamp duty, mortgages
+          and small-company tax. Every figure is taken from HMRC, Revenue Scotland or the Welsh
+          Revenue Authority, dated, and shown with the bands it came from.
+        </p>
+        <ul class="chips">
+          <li>No sign-up</li>
+          <li>Nothing leaves your browser</li>
+          <li>Every rate dated and sourced</li>
+        </ul>
+      </div>
+
+      {
+        /*
+         * A plain GET form, not an island. The calculator already restores its
+         * inputs from the query string, so `?salary=45000` lands on a fully
+         * computed result — with no JavaScript involved on this page at all.
+         */
+      }
+      <form class="start-panel" method="get" action="/take-home-pay-calculator/">
+        <span class="eyebrow">Start here</span>
+        <h2>What do you actually take home?</h2>
+        <label class="start-field">
+          <span aria-hidden="true">£</span>
+          <input
+            type="number"
+            name="salary"
+            inputmode="numeric"
+            value={SAMPLE_SALARY}
+            min="0"
+            step="500"
+            aria-label="Gross annual salary"
+          />
+        </label>
+        <button class="btn-cta" type="submit">Show my take-home pay</button>
+        <p>
+          Runs entirely in your browser. Your salary is never sent anywhere, stored or logged.
+        </p>
+      </form>
+    </div>
+  </section>
+
   <div class="wrap">
-    <section class="tool-header" style="padding-block:2.5rem 1.5rem">
-      <h1>UK tax calculators that show their working</h1>
-      <p class="tool-standfirst">
-        Free calculators for the {YEAR.label} tax year. Every figure is sourced from HMRC, Revenue
-        Scotland or the Welsh Revenue Authority, dated, and shown with the bands it came from — so
-        you can check it rather than trust it.
-      </p>
-      <p class="verified">
-        <span>
-          No sign-up &middot; nothing leaves your browser &middot; rates verified 7 August 2026
-        </span>
-      </p>
+    <section class="section">
+      <div class="section-head">
+        <h2>The three people ask for most</h2>
+        <a href="#all-calculators">All {TOOLS.length} calculators</a>
+      </div>
+      <ul class="card-grid card-grid-feature">
+        {
+          featured.map((item) => (
+            <li>
+              <a class="card card-feature" href={`/${item.tool.slug}/`}>
+                <span class="eyebrow">{item.category}</span>
+                <strong>{item.tool.h1}</strong>
+                <span>{item.tool.standfirst}</span>
+                <span class="card-fact">
+                  {item.factLabel} <strong>{item.factValue}</strong>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
     </section>
+
+    {/* Zone 1: below the fold, after the featured tools. */}
+    <AdSlot format="leaderboard" />
 
     {
       CATEGORIES.map((category) => (
-        <section style="margin-bottom:2.5rem">
-          <h2 style="margin-top:1.5rem">
-            <a href={`/${category.slug}/`} style="text-decoration:none">{category.title}</a>
-          </h2>
-          <p class="prose">{category.description}</p>
+        <section class="section">
+          <div>
+            <h2>
+              <a href={`/${category.slug}/`} style="text-decoration:none;color:inherit">
+                {category.title}
+              </a>
+            </h2>
+            <p class="section-intro">{category.description}</p>
+          </div>
           <ul class="card-grid">
             {toolsInCategory(category.slug).map((tool) => (
               <li>
                 <a class="card" href={`/${tool.slug}/`}>
-                  <strong>{tool.h1}</strong>
+                  <strong>{tool.shortName}</strong>
                   <span>{tool.standfirst}</span>
                 </a>
               </li>
@@ -49,110 +153,119 @@ const description = SITE.description;
       ))
     }
 
-    <AdSlot format="leaderboard" />
+    {/* Zone 2: between the tool grid and the editorial. */}
+    <AdSlot format="rectangle" />
 
-    <section class="prose deferred">
-      <h2>What changed for {YEAR.label}</h2>
-      <p>
-        The Autumn Budget of 26 November 2025 made several changes that take effect this tax year.
-        The ones most likely to affect you:
-      </p>
-      <ul>
-        <li>
-          <strong>Dividend tax rose 2 percentage points</strong> to{' '}
-          {pct(YEAR.incomeTax.dividend.ordinaryRate)} and {pct(YEAR.incomeTax.dividend.upperRate)}.
-          Combined with 15% employer National Insurance, this has{' '}
-          <a href="/sole-trader-vs-limited-company-calculator/">
-            changed the answer to "should I go limited?"
-          </a>
-        </li>
-        <li>
-          <strong>Income tax and National Insurance thresholds are frozen</strong> for a further
-          three years, to 2030/31. Pay rises pull more people into higher bands each year.
-        </li>
-        <li>
-          <strong>Scottish starter and basic bands rose 7.4%</strong>, while the higher, advanced
-          and top thresholds were frozen.
-        </li>
-        <li>
-          <strong>The approved mileage rate rose to 55p</strong>, its first change since 2011.
-        </li>
-        <li>
-          <strong>Electric company car tax rose to 4%</strong>, and the redundancy weekly pay cap
-          rose to {gbp(YEAR.redundancy.weeklyPayCap)}.
-        </li>
-        <li>
-          <strong>Announced for later:</strong> salary sacrifice National Insurance relief capped at
-          £2,000 from April 2029, and property and savings income rates up 2 points from April 2027.
-        </li>
-      </ul>
-      <p>
-        <a href="/changelog/">See every rate change with its source</a>, or{' '}
-        <a href="/rates/">browse all {YEAR.label} rates</a>.
-      </p>
+    <section class="tool-body" style="padding-block:0 0">
+      <div>
+        <h2 style="margin-top:0">What changed for {YEAR.label}</h2>
+        <p class="section-intro" style="margin-bottom:1rem">
+          The Autumn Budget of 26 November 2025 made several changes that take effect this tax year.
+          The ones most likely to affect you:
+        </p>
+        <ul class="bullets">
+          <li>
+            <span>
+              <strong>Dividend tax rose 2 points</strong> to{' '}
+              {pct(YEAR.incomeTax.dividend.ordinaryRate)} and{' '}
+              {pct(YEAR.incomeTax.dividend.upperRate)}. With 15% employer National Insurance, this{' '}
+              <a href="/sole-trader-vs-limited-company-calculator/">
+                changed the answer to &ldquo;should I go limited?&rdquo;
+              </a>
+            </span>
+          </li>
+          <li>
+            <span>
+              <strong>Thresholds frozen to 2030/31.</strong> Income tax and NI bands stay put for
+              three more years, so pay rises pull more people into higher bands.
+            </span>
+          </li>
+          <li>
+            <span>
+              <strong>Scottish starter and basic bands rose 7.4%</strong>, while the higher,
+              advanced and top thresholds were frozen.
+            </span>
+          </li>
+          <li>
+            <span>
+              <strong>Mileage rose to {Math.round(YEAR.mileage.carFirst10000 * 100)}p</strong>{' '}
+              &mdash; its first change since 2011 &mdash; and electric company car tax rose to{' '}
+              {pct(YEAR.companyCars.zeroEmissionPercentage)}.
+            </span>
+          </li>
+          <li>
+            <span>
+              <strong>Announced for later:</strong> salary sacrifice National Insurance relief capped
+              at £2,000 from April 2029, and property and savings rates up 2 points from April 2027.
+            </span>
+          </li>
+        </ul>
+        <p>
+          <a href="/changelog/">See every rate change with its source</a>, or{' '}
+          <a href="/rates/">browse all {YEAR.label} rates</a>.
+        </p>
+      </div>
 
-      <h2>Guides</h2>
+      <aside class="tool-aside">
+        <div class="rail-card">
+          <span class="eyebrow">Why trust these numbers</span>
+          <p>
+            <strong style="color:var(--ink)">Every rate is dated and sourced.</strong> Each page
+            links the HMRC or devolved authority page the figures came from, and shows when it was
+            last checked.
+          </p>
+          <p>
+            <strong style="color:var(--ink)">Every calculation shows its working.</strong> You get
+            the band table, not just the answer, so you can check it against your payslip.
+          </p>
+          <p>
+            <strong style="color:var(--ink)">Every tool states its limits.</strong> Where a
+            calculation cannot capture your situation, the page says so.
+          </p>
+          <p class="rail-note">
+            <a href="/methodology/">How we calculate</a> &middot;{' '}
+            <a href="/about/">About this site</a>
+          </p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section deferred">
+      <div class="section-head">
+        <h2>Guides</h2>
+        <a href="/guides/">All {GUIDES.length} guides</a>
+      </div>
       <ul class="card-grid">
         {
           GUIDES.slice(0, 6).map((guide) => (
             <li>
-              <a class="card" href={`/guides/${guide.slug}/`}>
+              <a class="card card-guide" href={`/guides/${guide.slug}/`}>
                 <strong>{guide.h1}</strong>
-                <span>{guide.metaDescription}</span>
+                <span>{guide.standfirst}</span>
               </a>
             </li>
           ))
         }
       </ul>
-      <p><a href="/guides/">All guides</a></p>
-
-      <h2>Why trust these numbers?</h2>
-      <p>
-        Tax calculators are easy to build and easy to get subtly wrong. A great many UK calculators
-        conflate the three pension arrangements, apply a single Capital Gains Tax rate to a gain
-        that straddles two, or quietly claim the Employment Allowance for a company that cannot have
-        it. Those errors are invisible unless you already know the answer.
-      </p>
-      <p>Three things we do differently:</p>
-      <ul>
-        <li>
-          <strong>Every rate is dated and sourced.</strong> Each page links the HMRC or devolved
-          authority page the figures came from and shows when they were last checked.
-        </li>
-        <li>
-          <strong>Every calculation shows its working.</strong> You get the band table, not just the
-          answer, so you can verify it against your payslip or your accountant.
-        </li>
-        <li>
-          <strong>Every tool states its limits.</strong> Where a calculation cannot capture your
-          situation, the page says so rather than pretending otherwise.
-        </li>
-      </ul>
-      <p>
-        <a href="/methodology/">How we calculate</a> &middot;{' '}
-        <a href="/about/">About this site</a>
-      </p>
-
-      <p class="note">
-        {SITE.name} provides information, not financial or tax advice. Check anything important with
-        an accountant or with HMRC before acting on it.
-      </p>
     </section>
 
-    <section class="deferred">
+    <section class="section deferred" id="all-calculators" style="padding-bottom:3.5rem">
       <h2>All {TOOLS.length} calculators</h2>
-      <ul class="card-grid">
+      <ul class="card-grid card-grid-compact">
         {
           TOOLS.map((tool) => (
             <li>
-              <a class="card" href={`/${tool.slug}/`}>
-                <strong>{tool.shortName}</strong>
-                <span>{tool.standfirst}</span>
+              <a class="card card-plain" href={`/${tool.slug}/`}>
+                {tool.shortName}
               </a>
             </li>
           ))
         }
       </ul>
+      <p class="verified">
+        {SITE.name} provides information, not financial or tax advice. Check anything important with
+        an accountant or with HMRC before acting on it.
+      </p>
     </section>
   </div>
 </BaseLayout>

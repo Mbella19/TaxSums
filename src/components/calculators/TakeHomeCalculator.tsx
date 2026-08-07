@@ -4,6 +4,7 @@ import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
 import { calculateTakeHome } from '../../lib/take-home';
 import type { PensionMethod } from '../../lib/pension';
 import {
+  Breakdown,
   ChoiceGroup,
   CheckGroup,
   FigureRow,
@@ -12,6 +13,7 @@ import {
   MoneyInput,
   NumberInput,
   pct,
+  ResultActions,
   Select,
   useUrlState,
 } from './ui';
@@ -188,7 +190,18 @@ export default function TakeHomeCalculator({ fixedRegion }: Props) {
       <div class="calc-result" aria-live="polite">
         <Headline
           amount={gbp(result.takeHomeMonthly)}
-          caption={`per month, ${gbp(result.takeHomeAnnual)} a year`}
+          caption="per month"
+          sub={`${gbp(result.takeHomeAnnual)} a year · ${gbp(result.takeHomeWeekly)} a week · ${gbp(result.takeHomeDaily)} a day`}
+        />
+
+        <Breakdown
+          segments={[
+            { label: 'You keep', amount: result.takeHomeAnnual, tone: 'keep' },
+            { label: 'Income tax', amount: result.incomeTax.total, tone: 'tax' },
+            { label: 'NI', amount: result.nationalInsurance.total, tone: 'ni' },
+            { label: 'Student loan', amount: result.studentLoans.total, tone: 'loan' },
+            { label: 'Pension', amount: result.pension.costToEmployee, tone: 'pension' },
+          ]}
         />
 
         <FigureRow
@@ -227,6 +240,11 @@ export default function TakeHomeCalculator({ fixedRegion }: Props) {
           </p>
         )}
 
+
+        <ResultActions />
+      </div>
+
+      <div class="calc-detail">
         <div class="table-scroll">
           <table>
             <caption>How this was worked out</caption>

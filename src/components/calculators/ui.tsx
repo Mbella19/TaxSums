@@ -335,15 +335,107 @@ export function CheckGroup({ legend, hint, values, options, onInput, span }: Che
 interface ResultProps {
   amount: string;
   caption: string;
+  /** A supporting line under the figure, e.g. "£691 a week · £138 a day". */
+  sub?: string;
   children?: ComponentChildren;
 }
 
-export function Headline({ amount, caption, children }: ResultProps) {
+export function Headline({ amount, caption, sub, children }: ResultProps) {
   return (
     <div class="headline-figure">
       <span class="amount">{amount}</span>
       <span class="caption">{caption}</span>
+      {sub && <span class="headline-sub">{sub}</span>}
       {children}
+    </div>
+  );
+}
+
+export interface BreakdownSegment {
+  readonly label: string;
+  readonly amount: number;
+  /** A CSS custom property name, so the bar follows the theme. */
+  readonly tone: 'keep' | 'tax' | 'ni' | 'loan' | 'pension';
+}
+
+const TONE: Record<BreakdownSegment['tone'], string> = {
+  keep: 'var(--accent)',
+  tax: 'var(--warn)',
+  ni: 'var(--danger)',
+  loan: 'var(--ink-muted)',
+  pension: 'var(--accent-bright)',
+};
+
+/**
+ * Where the money went, as a single bar.
+ *
+ * Proportion is the one thing a column of figures cannot show: "£6,486 of tax"
+ * means little until you see it is a seventh of the total. Built from divs, so
+ * it costs no JavaScript beyond what the calculator already ships, works
+ * without colour alone (every segment is also labelled with its percentage),
+ * and prints correctly.
+ */
+export function Breakdown({ segments }: { segments: readonly BreakdownSegment[] }) {
+  const shown = segments.filter((segment) => segment.amount > 0);
+  const total = shown.reduce((sum, segment) => sum + segment.amount, 0);
+  if (total <= 0 || shown.length < 2) return null;
+
+  const withShare = shown.map((segment) => ({
+    ...segment,
+    share: segment.amount / total,
+  }));
+
+  return (
+    <div class="breakdown">
+      <div class="breakdown-bar" role="presentation">
+        {withShare.map((segment) => (
+          <span
+            key={segment.label}
+            style={{ width: `${(segment.share * 100).toFixed(1)}%`, background: TONE[segment.tone] }}
+          />
+        ))}
+      </div>
+      <ul class="breakdown-legend">
+        {withShare.map((segment) => (
+          <li key={segment.label}>
+            <i style={{ background: TONE[segment.tone] }} aria-hidden="true" />
+            {segment.label} {pct(segment.share)}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * The action row at the foot of a result.
+ *
+ * Every calculator serialises its inputs to the query string, so the current
+ * URL already *is* the shareable result — this just saves the reader selecting
+ * the address bar. A result you can send to your partner or your accountant is
+ * worth more than one they have to re-enter, and shared links are the kind of
+ * backlink you cannot buy.
+ */
+export function ResultActions({ workingHref = '#working' }: { workingHref?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access can be refused (insecure context, permissions). The
+      // URL is still in the address bar, so there is nothing to recover from.
+    }
+  };
+
+  return (
+    <div class="result-actions">
+      <button type="button" onClick={copy} aria-live="polite">
+        {copied ? 'Link copied' : 'Copy shareable link'}
+      </button>
+      <a href={workingHref}>See the full working &darr;</a>
     </div>
   );
 }

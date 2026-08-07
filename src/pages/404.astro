@@ -1,48 +1,75 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { CATEGORIES, TOOLS, toolsInCategory } from '../data/site';
+import { CATEGORIES, GUIDES, TOOLS, toolBySlug } from '../data/site';
+
+// The six people reach for most often — the ones worth putting in front of
+// somebody who has just hit a dead end.
+const POPULAR = [
+  'take-home-pay-calculator',
+  'stamp-duty-calculator',
+  'sole-trader-vs-limited-company-calculator',
+  'mortgage-overpayment-calculator',
+  'redundancy-pay-calculator',
+  'company-car-tax-calculator',
+].map(toolBySlug);
 ---
 
 <BaseLayout
   title="Page not found | TaxSums"
   description="That page does not exist. Here are all our UK tax calculators."
   noindex
+  noAds
 >
-  <div class="wrap">
-    <div class="tool-header">
+  <div class="wrap error-page">
+    <div style="max-width:60ch;display:flex;flex-direction:column;gap:0.5rem">
+      <span class="error-code">404</span>
       <h1>That page does not exist</h1>
-      <p class="tool-standfirst">
-        The link may be out of date, or the address may have a typo. Every calculator on the site is
-        listed below.
+      <p class="tool-standfirst" style="margin:0">
+        The link may be out of date, or the address may have a typo. Search below, or start from one
+        of the calculators people reach for most.
       </p>
     </div>
 
-    {
-      CATEGORIES.map((category) => (
-        <section>
-          <h2>
-            <a href={`/${category.slug}/`} style="text-decoration:none">{category.title}</a>
-          </h2>
-          <ul class="card-grid">
-            {toolsInCategory(category.slug).map((tool) => (
-              <li>
-                <a class="card" href={`/${tool.slug}/`}>
-                  <strong>{tool.h1}</strong>
-                  <span>{tool.standfirst}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))
-    }
+    <div>
+      <h2 class="eyebrow" style="margin-bottom:0.8rem">Most used calculators</h2>
+      <ul class="card-grid" style="max-width:52rem">
+        {
+          POPULAR.map((tool) => (
+            <li>
+              <a class="card card-plain" href={`/${tool.slug}/`}>
+                {tool.h1}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
 
-    <section class="prose">
-      <p>
-        Still stuck? <a href="/">Start from the homepage</a>, browse the{' '}
-        <a href="/guides/">guides</a>, or <a href="/contact/">tell us about the broken link</a> —
-        {TOOLS.length} calculators and we would rather none of them were unreachable.
-      </p>
-    </section>
+    <div>
+      <h2 class="eyebrow" style="margin-bottom:0.8rem">Everything else</h2>
+      <ul class="card-grid card-grid-compact" style="max-width:52rem">
+        {
+          CATEGORIES.map((category) => (
+            <li>
+              <a class="card card-plain" href={`/${category.slug}/`}>
+                {category.navTitle}
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a class="card card-plain" href="/guides/">Guides</a>
+        </li>
+        <li>
+          <a class="card card-plain" href="/rates/">All rates</a>
+        </li>
+      </ul>
+    </div>
+
+    <p>
+      <a href="/">Back to the homepage</a> &middot; <a href="/rates/">All rates and sources</a>
+      &middot; <a href="/contact/">Tell us about the broken link</a> &mdash; {TOOLS.length}
+      calculators and {GUIDES.length} guides, and we would rather none of them were unreachable.
+    </p>
   </div>
 </BaseLayout>

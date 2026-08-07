@@ -1,6 +1,15 @@
 import { useMemo } from 'preact/hooks';
 import { monthlyPayment, overpaymentSaving } from '../../lib/mortgage';
-import { FigureRow, gbp, Headline, MoneyInput, NumberInput, plural, useUrlState } from './ui';
+import {
+  FigureRow,
+  gbp,
+  Headline,
+  MoneyInput,
+  NumberInput,
+  plural,
+  ResultActions,
+  useUrlState,
+} from './ui';
 
 export default function MortgageOverpaymentCalculator() {
   const [state, update] = useUrlState({
@@ -120,6 +129,11 @@ export default function MortgageOverpaymentCalculator() {
           </p>
         )}
 
+
+        <ResultActions />
+      </div>
+
+      <div class="calc-detail">
         <div class="table-scroll">
           <table>
             <caption>With and without overpaying</caption>

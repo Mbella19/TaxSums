@@ -13,6 +13,7 @@ interface Props {
 
 const { tool } = Astro.props;
 const category = categoryBySlug(tool.category);
+const source = CURRENT_TAX_YEAR.sources[tool.sourceKey];
 
 // A calculator is a web application, not an article. Marking it as one is both
 // accurate and what lets it appear as a tool rather than a page of prose.
@@ -30,6 +31,15 @@ const appSchema = {
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'GBP' },
   publisher: { '@type': 'Organization', name: SITE.name, url: SITE.origin },
 };
+
+// Built from the slots the page actually fills, so the contents list can never
+// point at a section that is not there.
+const sections = [
+  { id: 'working', label: 'How it is calculated', slot: 'explanation' },
+  { id: 'rates-used', label: `${CURRENT_TAX_YEAR.label} rates used`, slot: 'reference' },
+  { id: 'limits', label: 'What this does not do', slot: 'limits' },
+  { id: 'questions', label: 'Common questions', slot: 'faq' },
+].filter((section) => Astro.slots.has(section.slot));
 ---
 
 <BaseLayout
@@ -50,6 +60,11 @@ const appSchema = {
         {/* The calculator itself — the only interactive part of the page. */}
         <slot name="calculator" />
 
+        {/*
+          Zone 1: after the answer, before the working. The reader has what they
+          came for, so an advert here interrupts nothing — and it is far enough
+          from the inputs that a mistap is not plausible.
+        */}
         <AdSlot format="leaderboard" />
 
         {/*
@@ -57,35 +72,61 @@ const appSchema = {
           without running any JavaScript, which is the whole point of putting
           the explanation outside the island.
         */}
-        <div class="prose">
+        <section id="working" class="prose">
           <slot name="explanation" />
-        </div>
+        </section>
 
-        <div class="deferred">
+        <section id="rates-used" class="deferred">
           <slot name="reference" />
-        </div>
+        </section>
 
+        {/* Zone 2: between the explanation and the reference tables. */}
         <AdSlot format="rectangle" />
 
-        <div class="prose deferred">
+        <section id="limits" class="prose deferred">
           <slot name="limits" />
-        </div>
+        </section>
 
-        <slot name="faq" />
+        <section id="questions">
+          <slot name="faq" />
+        </section>
 
         <RelatedTools tool={tool} />
 
         <p class="verified">
-          <span>
-            Tax year {CURRENT_TAX_YEAR.label} &middot; <a href="/methodology/">How we calculate</a>
-            &middot; <a href="/rates/">All rates and sources</a> &middot;
-            <a href="/changelog/">What changed</a>
-          </span>
+          Tax year {CURRENT_TAX_YEAR.label} &middot; <a href="/methodology/">How we calculate</a>
+          &middot; <a href="/rates/">All rates and sources</a> &middot;
+          <a href="/changelog/">What changed</a>
         </p>
       </div>
 
       <aside class="tool-aside">
+        {
+          sections.length > 0 && (
+            <nav class="rail-card" aria-label="On this page">
+              <span class="eyebrow">On this page</span>
+              {sections.map((section) => (
+                <a href={`#${section.id}`}>{section.label}</a>
+              ))}
+            </nav>
+          )
+        }
+
+        {/* Zone 3: sticky rail, desktop only — hidden below 48rem by CSS. */}
         <AdSlot format="sidebar" />
+
+        <div class="rail-card">
+          <span class="eyebrow">Where these figures come from</span>
+          <p>
+            Every rate on this page is read from a single dated file, never hard-coded into the
+            calculator.
+          </p>
+          <p class="rail-note">
+            Verified against <a href={source.url} rel="nofollow noopener" target="_blank">
+              {source.title}
+            </a>. <a href="/rates/">See every rate</a>.
+          </p>
+        </div>
       </aside>
     </div>
   </div>

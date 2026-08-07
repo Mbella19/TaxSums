@@ -1,7 +1,17 @@
 import { useMemo } from 'preact/hooks';
 import { CURRENT_TAX_YEAR as YEAR } from '../../data/tax-years';
 import { calculatePropertyGain } from '../../lib/capital-gains';
-import { ChoiceGroup, FigureRow, gbp, Headline, MoneyInput, NumberInput, pct, useUrlState } from './ui';
+import {
+  ChoiceGroup,
+  FigureRow,
+  gbp,
+  Headline,
+  MoneyInput,
+  NumberInput,
+  pct,
+  ResultActions,
+  useUrlState,
+} from './ui';
 
 export default function CgtPropertyCalculator() {
   const [state, update] = useUrlState({
@@ -161,6 +171,11 @@ export default function CgtPropertyCalculator() {
           </p>
         )}
 
+
+        <ResultActions />
+      </div>
+
+      <div class="calc-detail">
         <div class="table-scroll">
           <table>
             <caption>How the tax was worked out{result.perOwner ? ', per owner' : ''}</caption>

@@ -1,6 +1,9 @@
 ---
 import { SITE, ADS_ENABLED, ADSENSE_CLIENT } from '../config';
-import { CATEGORIES } from '../data/site';
+import { CATEGORIES, toolsInCategory } from '../data/site';
+import { CURRENT_TAX_YEAR } from '../data/tax-years';
+import SiteSearch from '../components/SiteSearch.astro';
+import AnchorAd from '../components/AnchorAd.astro';
 import '../styles/global.css';
 
 export interface Crumb {
@@ -16,9 +19,23 @@ interface Props {
   crumbs?: Crumb[];
   /** Set on pages that must never be indexed. Nothing uses it by default. */
   noindex?: boolean;
+  /**
+   * Suppresses every ad unit on the page. Set on the trust pages — /about/,
+   * /privacy/, /methodology/ and the like. Someone reading those is deciding
+   * whether to believe the numbers, which is the wrong moment to sell them
+   * something.
+   */
+  noAds?: boolean;
 }
 
-const { title, description, schema = [], crumbs = [], noindex = false } = Astro.props;
+const {
+  title,
+  description,
+  schema = [],
+  crumbs = [],
+  noindex = false,
+  noAds = false,
+} = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, SITE.origin).href;
 
@@ -56,6 +73,23 @@ const allSchema = [organisationSchema, ...(breadcrumbSchema ? [breadcrumbSchema]
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex, follow" />}
 
+    {
+      /*
+       * Newsreader is self-hosted and subset, so there is no third-party
+       * request and no DNS round-trip before the H1 can paint. Preloading the
+       * roman cut — the only one used above the fold — closes the swap window
+       * to near zero, which is what keeps CLS at 0 despite `font-display:swap`.
+       * The italic is used on guide standfirsts only, so it is not preloaded.
+       */
+    }
+    <link
+      rel="preload"
+      href="/fonts/newsreader-roman.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={SITE.name} />
     <meta property="og:title" content={title} />
@@ -80,7 +114,7 @@ const allSchema = [organisationSchema, ...(breadcrumbSchema ? [breadcrumbSchema]
        * AdSense is deliberately absent until an account is approved. Ad slots
        * already reserve their height, so switching this on cannot shift layout.
        */
-      ADS_ENABLED && ADSENSE_CLIENT && (
+      ADS_ENABLED && ADSENSE_CLIENT && !noAds && (
         <script is:inline
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
@@ -97,6 +131,7 @@ const allSchema = [organisationSchema, ...(breadcrumbSchema ? [breadcrumbSchema]
       <div class="wrap">
         {/* Split so the second syllable can take the accent colour. */}
         <a class="brand" href="/">Tax<span>Sums</span></a>
+        <span class="year-badge">{CURRENT_TAX_YEAR.label}</span>
         <nav class="site-nav" aria-label="Main">
           {
             CATEGORIES.map((category) => (
@@ -106,6 +141,7 @@ const allSchema = [organisationSchema, ...(breadcrumbSchema ? [breadcrumbSchema]
           <a href="/guides/">Guides</a>
           <a href="/rates/">Rates</a>
         </nav>
+        <SiteSearch />
       </div>
     </header>
 
@@ -132,13 +168,20 @@ const allSchema = [organisationSchema, ...(breadcrumbSchema ? [breadcrumbSchema]
       <div class="wrap">
         <div class="footer-cols">
           {
+            /*
+             * Generated from the tool list, not hand-written. Internal links
+             * are how Google discovers pages, and a hand-maintained footer rots
+             * the moment a URL changes.
+             */
             CATEGORIES.map((category) => (
               <div>
                 <h2>{category.navTitle}</h2>
                 <ul>
-                  <li>
-                    <a href={`/${category.slug}/`}>All {category.navTitle.toLowerCase()} tools</a>
-                  </li>
+                  {toolsInCategory(category.slug).map((tool) => (
+                    <li>
+                      <a href={`/${tool.slug}/`}>{tool.shortName}</a>
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))
@@ -150,6 +193,7 @@ const allSchema = [organisationSchema, ...(breadcrumbSchema ? [breadcrumbSchema]
               <li><a href="/methodology/">Methodology</a></li>
               <li><a href="/rates/">Rates and sources</a></li>
               <li><a href="/changelog/">Rate changelog</a></li>
+              <li><a href="/guides/">Guides</a></li>
               <li><a href="/contact/">Contact</a></li>
             </ul>
           </div>
@@ -166,13 +210,16 @@ const allSchema = [organisationSchema, ...(breadcrumbSchema ? [breadcrumbSchema]
         <div class="footer-legal">
           <p>
             <strong>{SITE.name}</strong> gives estimates based on published HMRC, Revenue Scotland
-            and Welsh Revenue Authority figures for the 2026/27 tax year. It is information, not
-            financial or tax advice, and it cannot account for every personal circumstance. Check
-            anything important with an accountant or with HMRC before acting on it.
+            and Welsh Revenue Authority figures for the {CURRENT_TAX_YEAR.label} tax year. It is
+            information, not financial or tax advice, and it cannot account for every personal
+            circumstance. Check anything important with an accountant or with HMRC before acting on
+            it.
           </p>
           <p>&copy; {new Date().getFullYear()} {SITE.name}. Rates last verified 7 August 2026.</p>
         </div>
       </div>
     </footer>
+
+    {!noAds && <AnchorAd />}
   </body>
 </html>
