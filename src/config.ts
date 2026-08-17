@@ -46,6 +46,29 @@ export const ADS_ENABLED = true;
 export const ADSENSE_CLIENT = 'ca-pub-5145566567335944';
 
 /**
+ * Slot IDs, one per zone, from AdSense → Ads → By ad unit.
+ *
+ * Held here rather than passed at each `<AdSlot />` so the nine call sites stay
+ * declarative — a page says which *kind* of zone it is and the ID follows. The
+ * same unit legitimately appears on several pages; AdSense reports per unit, not
+ * per placement.
+ *
+ * An empty string is a real state, not a mistake: the zone renders nothing at
+ * all, exactly as it did before approval. That is what lets a zone be wired up
+ * one at a time without ever showing an empty bordered box to a reader.
+ */
+export const AD_SLOTS = {
+  /** Homepage, category pages, tool pages — horizontal, below the fold. */
+  leaderboard: '8688680783',
+  /** In-content square: homepage, guides, tool pages. */
+  rectangle: '2283054533',
+  /** Vertical half-page in the desktop rail. */
+  sidebar: '7361634168',
+  /** Mobile sticky anchor, dismissible, hidden above 48rem. */
+  anchor: '5856980803',
+} as const;
+
+/**
  * Number of unit tests behind the calculation engine, quoted on /about/ and
  * /methodology/ as evidence the maths is checked.
  *

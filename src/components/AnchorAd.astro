@@ -1,11 +1,12 @@
 ---
-import { ADS_ENABLED, ADSENSE_CLIENT } from '../config';
+import { ADS_ENABLED, ADSENSE_CLIENT, AD_SLOTS } from '../config';
 
 interface Props {
+  /** Overrides the configured anchor slot. Nothing needs this yet. */
   slot?: string;
 }
 
-const { slot } = Astro.props;
+const slot = Astro.props.slot ?? AD_SLOTS.anchor;
 const live = ADS_ENABLED && ADSENSE_CLIENT && slot;
 // Same three states as AdSlot: nothing renders while ads are on but this unit
 // has no slot ID, so a reviewer never sees an empty sticky bar.

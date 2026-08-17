@@ -1,13 +1,15 @@
 ---
-import { ADS_ENABLED, ADSENSE_CLIENT } from '../config';
+import { ADS_ENABLED, ADSENSE_CLIENT, AD_SLOTS } from '../config';
 
 interface Props {
   format: 'leaderboard' | 'rectangle' | 'sidebar';
-  /** AdSense slot ID. Only used once ADS_ENABLED is true. */
+  /** Overrides the zone's configured slot. Nothing needs this yet. */
   slot?: string;
 }
 
-const { format, slot } = Astro.props;
+const { format } = Astro.props;
+// The zone's own ID unless a caller deliberately overrides it.
+const slot = Astro.props.slot ?? AD_SLOTS[format];
 
 // Shown only while ads are switched off, so the reserved space reads as
 // deliberate during development rather than as a broken image.
