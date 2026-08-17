@@ -45,6 +45,17 @@ export const SITE = {
 export const ADS_ENABLED = true;
 export const ADSENSE_CLIENT = 'ca-pub-5145566567335944';
 
+/**
+ * Number of unit tests behind the calculation engine, quoted on /about/ and
+ * /methodology/ as evidence the maths is checked.
+ *
+ * It lives here for the same reason no page restates a tax rate: both pages had
+ * drifted to "112" while the suite had grown to 139, which is a stale accuracy
+ * claim on a site whose entire pitch is not being stale. `site-integrity`
+ * asserts this matches the real suite size, so it fails rather than rots.
+ */
+export const TEST_COUNT = 141;
+
 /** Current tax year shown by default across the site. */
 export const DEFAULT_TAX_YEAR = '2026-27';
 

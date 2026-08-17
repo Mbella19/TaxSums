@@ -12,7 +12,7 @@ import { SITE, ADS_ENABLED } from '../config';
   <div class="wrap">
     <div class="tool-header">
       <h1>Privacy policy</h1>
-      <p class="tool-standfirst">Last updated 7 August 2026.</p>
+      <p class="tool-standfirst">Last updated 17 August 2026.</p>
     </div>
 
     <div class="tool-body">
@@ -46,10 +46,20 @@ import { SITE, ADS_ENABLED } from '../config';
         {
           ADS_ENABLED ? (
             <>
+              {
+                /*
+                 * Consent is Google's certified consent message, configured in
+                 * AdSense under Privacy & messaging — there is no banner in this
+                 * repo. Word it as what Google actually does, not as a promise
+                 * about a component we do not ship: an unpublished GDPR message
+                 * would make any stronger claim here untrue.
+                 */
+              }
               <p>
                 We show advertising through Google AdSense, which uses cookies to serve and measure
-                ads. You are asked for consent before any advertising cookie is set, and you can
-                change or withdraw that consent at any time.
+                ads. If you are in the UK or the EEA, Google shows its own consent message before
+                using cookies for personalised advertising, and that message is where you change or
+                withdraw your choice later.
               </p>
               <p>
                 Google may use cookies to serve ads based on your prior visits to this or other
@@ -74,11 +84,41 @@ import { SITE, ADS_ENABLED } from '../config';
         }
 
         <h2>Third parties</h2>
-        <p>
-          The site loads no external fonts, scripts or images. Links to gov.uk, Revenue Scotland and
-          other sources are ordinary links — following one takes you to a site with its own privacy
-          policy.
-        </p>
+        {
+          /*
+           * This section used to state flatly that the site loads nothing external.
+           * That was true, and then ADS_ENABLED was switched on and it silently
+           * became a false statement in a privacy policy — the sort of thing an
+           * AdSense reviewer checks by opening the network tab. Gate it on the same
+           * flag as the cookie section so the two can never disagree again.
+           */
+        }
+        {
+          ADS_ENABLED ? (
+            <p>
+              Google AdSense is the only third party this site loads. Its script is served from
+              googlesyndication.com, and Google receives your IP address, your browser details and
+              the address of the page you are on as part of serving an advert. Google acts as an
+              independent data controller for that information, under{' '}
+              <a
+                href="https://policies.google.com/privacy"
+                rel="nofollow noopener"
+                target="_blank"
+              >
+                its own privacy policy
+              </a>
+              . Everything else — fonts, styles, images — is served from this domain, so no other
+              company sees your visit. Links to gov.uk, Revenue Scotland and other sources are
+              ordinary links: following one takes you to a site with its own privacy policy.
+            </p>
+          ) : (
+            <p>
+              The site loads no external fonts, scripts or images. Links to gov.uk, Revenue Scotland
+              and other sources are ordinary links — following one takes you to a site with its own
+              privacy policy.
+            </p>
+          )
+        }
 
         <h2>Your rights</h2>
         <p>

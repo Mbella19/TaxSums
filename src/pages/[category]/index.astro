@@ -56,6 +56,96 @@ const FACTS: Record<string, string> = {
   'vat-flat-rate-calculator': `Registration threshold ${gbp(YEAR.vat.registrationThreshold)}`,
 };
 
+/*
+ * Category pages were link hubs and nothing else — 103 words on /mortgages/,
+ * every one of them a card label. That is the shape of page an ad network reads
+ * as low value, and it is a poor answer for a reader who arrived on the
+ * category rather than the tool. Each one now explains what actually separates
+ * the calculators it lists.
+ *
+ * Same rule as everywhere else: no figure is typed in, all are read from the
+ * tax year, so a Budget cannot leave this prose quietly wrong.
+ */
+const employeeNi = YEAR.nationalInsurance.employee;
+const ct = YEAR.corporationTax;
+const taperEnd =
+  YEAR.incomeTax.taperThreshold + YEAR.incomeTax.personalAllowance * YEAR.incomeTax.taperDivisor;
+// Marginal relief lifts the rate between the limits above the headline 25%.
+const ctMarginalRate =
+  ct.mainRate + ((ct.mainRate - ct.smallProfitsRate) * ct.lowerLimit) / (ct.upperLimit - ct.lowerLimit);
+
+interface CategoryNote {
+  heading: string;
+  paragraphs: string[];
+  figures: { label: string; value: string }[];
+}
+
+const NOTES: Record<string, CategoryNote> = {
+  'salary-and-tax': {
+    heading: 'What decides your take-home pay',
+    paragraphs: [
+      `Two people on identical salaries can take home noticeably different amounts. Where you live decides which bands apply — Scotland has ${YEAR.incomeTax.bands.scotland.length} rates against ${YEAR.incomeTax.bands['england-nireland'].length} in the rest of the UK. How your pension is arranged decides whether relief comes before or after National Insurance, which is worth real money and is the thing most calculators get wrong. And your student loan plan sets both the threshold you start repaying at and the rate you repay.`,
+      `Frozen thresholds are the other surprise. The personal allowance has stayed at ${gbp(YEAR.incomeTax.personalAllowance)} while wages rose, so a pay rise moves more of your income into higher bands than it once would have. Between ${gbp(YEAR.incomeTax.taperThreshold)} and ${gbp(taperEnd)} the allowance is withdrawn by £1 for every £${YEAR.incomeTax.taperDivisor} earned, which produces an effective rate near 60% on that slice — higher than the headline rate paid by someone on twice the salary.`,
+      `Each calculator here shows the bands it used, so you can reconcile the figure against a payslip instead of taking it on trust.`,
+    ],
+    figures: [
+      { label: 'Personal allowance', value: gbp(YEAR.incomeTax.personalAllowance) },
+      { label: 'Allowance gone at', value: gbp(taperEnd) },
+      {
+        label: 'Employee NI',
+        value: `${pct(employeeNi.mainRate)}, then ${pct(employeeNi.upperRate)}`,
+      },
+      { label: 'Scottish bands', value: `${YEAR.incomeTax.bands.scotland.length} rates` },
+    ],
+  },
+  property: {
+    heading: 'Three property taxes, three different answers',
+    paragraphs: [
+      `The same house at the same price costs a different amount depending on which country it stands in. England and Northern Ireland charge Stamp Duty Land Tax, Scotland charges Land and Buildings Transaction Tax, and Wales charges Land Transaction Tax. Different thresholds, different bands, different reliefs — they are three taxes, not one tax with regional trim.`,
+      `The reliefs diverge furthest. England and Northern Ireland raise the threshold for first-time buyers, but the relief vanishes entirely above ${gbp(sdlt.firstTimeBuyerRelief?.maximumPrice ?? 0)}: a pound over the limit and the whole thing is lost, a cliff rather than a taper. Scotland's first-time buyer relief has no upper price limit at all. Wales offers none. Buying a second property adds a surcharge everywhere, but Scotland applies its ${pct(lbtt.additionalProperty.kind === 'flat' ? lbtt.additionalProperty.rate : 0)} to the entire price rather than to the slice above a threshold.`,
+      `Selling is a separate calculation. Capital Gains Tax is due on a property that has not been your only or main home throughout, the annual exempt amount is ${gbp(YEAR.capitalGains.annualExemptAmount)}, and the gain must be reported and paid within ${YEAR.capitalGains.propertyReportingDays} days of completion — a deadline that catches people who expect it to wait for the tax return.`,
+    ],
+    figures: [
+      { label: 'England & NI nil-rate', value: gbp(sdlt.standardBands[0].upTo ?? 0) },
+      { label: 'Scotland nil-rate', value: gbp(lbtt.standardBands[0].upTo ?? 0) },
+      { label: 'Wales nil-rate', value: gbp(ltt.standardBands[0].upTo ?? 0) },
+      { label: 'CGT exempt amount', value: gbp(YEAR.capitalGains.annualExemptAmount) },
+    ],
+  },
+  mortgages: {
+    heading: 'Why affordability has no single right answer',
+    paragraphs: [
+      `The FCA withdrew its mandatory affordability stress test in August 2022. Lenders have set their own limits since, and the spread is wide — roughly 4 to 5.5 times income for most applicants, stretching further for large deposits and for some professions. A calculator that answers with one confident number is concealing that spread rather than resolving it.`,
+      `So the affordability tool here returns a range and names the assumptions behind it. What a lender will actually advance depends on its own affordability model, your committed outgoings, the term you take and the rate you fix at — none of which a calculator can see.`,
+      `Overpaying is far more predictable, because interest is charged on the balance outstanding. Money paid early avoids interest for every remaining month of the term, which is why a modest overpayment in year two beats a larger one in year fifteen. Most fixed deals permit 10% of the balance each year without an early repayment charge, and that allowance is the thing to check before setting up a standing order.`,
+    ],
+    figures: [
+      { label: 'Typical income multiple', value: '4x to 5.5x' },
+      { label: 'Usual penalty-free overpayment', value: '10% a year' },
+      { label: 'Mandatory stress test', value: 'Withdrawn 2022' },
+    ],
+  },
+  business: {
+    heading: 'What changed for company owners this year',
+    paragraphs: [
+      `Dividend tax rose by two percentage points on 6 April 2026. The ordinary rate is now ${pct(YEAR.incomeTax.dividend.ordinaryRate)} and the dividend allowance is ${gbp(YEAR.incomeTax.dividend.allowance)}, so the low-salary-plus-dividends arrangement that once made incorporation an easy decision is a genuinely closer call. The comparison has to be run on your own numbers rather than assumed.`,
+      `Corporation tax has a middle that is easy to miss. Profits to ${gbp(ct.lowerLimit)} are taxed at ${pct(ct.smallProfitsRate)} and profits above ${gbp(ct.upperLimit)} at ${pct(ct.mainRate)}, but marginal relief between the two produces an effective rate of ${pct(ctMarginalRate)} — above the headline main rate. A company in that band pays more on its next pound of profit than a much larger one does.`,
+      `The trap most comparisons fall into is the Employment Allowance. It removes up to ${gbp(YEAR.nationalInsurance.employer.employmentAllowance)} from an employer's National Insurance bill, but a company whose only employee is also its sole director cannot claim it. Tools that apply it regardless make the limited company look better than it is.`,
+    ],
+    figures: [
+      { label: 'Dividend ordinary rate', value: pct(YEAR.incomeTax.dividend.ordinaryRate) },
+      {
+        label: 'Corporation tax',
+        value: `${pct(ct.smallProfitsRate)} to ${pct(ct.mainRate)}`,
+      },
+      { label: 'Effective marginal rate', value: pct(ctMarginalRate) },
+      { label: 'VAT registration', value: gbp(YEAR.vat.registrationThreshold) },
+    ],
+  },
+};
+
+const note = NOTES[category.slug];
+
 // Guides that point at any tool in this category belong on this page too.
 const guides = GUIDES.filter((guide) =>
   guide.relatedTools.some((slug) => tools.some((tool) => tool.slug === slug)),
@@ -104,7 +194,26 @@ const listSchema = {
           }
         </ul>
 
-        {/* Zone 1: in-feed, after the tool grid. */}
+        {
+          note && (
+            <section class="section prose" style="padding-top:0">
+              <h2>{note.heading}</h2>
+              {note.paragraphs.map((paragraph) => (
+                <p>{paragraph}</p>
+              ))}
+              <dl class="figure-row">
+                {note.figures.map((figure) => (
+                  <div>
+                    <dt>{figure.label}</dt>
+                    <dd>{figure.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )
+        }
+
+        {/* Zone 1: in-feed, below the tools and the explanation, never above them. */}
         <AdSlot format="leaderboard" />
 
         {

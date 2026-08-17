@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { SITE } from '../config';
+import { SITE, TEST_COUNT } from '../config';
 import { TOOLS } from '../data/site';
 import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
 ---
@@ -50,7 +50,7 @@ import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
         </p>
         <p>
           What we do have is a disciplined process: every rate held in one versioned, sourced data
-          file; a calculation engine covered by 112 unit tests built from HMRC worked examples; and
+          file; a calculation engine covered by {TEST_COUNT} unit tests built from HMRC worked examples; and
           results cross-checked against established calculators before launch, with any disagreement
           investigated rather than assumed away. <a href="/methodology/">Read the methodology</a>.
         </p>

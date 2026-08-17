@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { TEST_COUNT } from '../config';
 import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
 ---
 
@@ -84,7 +85,8 @@ import { CURRENT_TAX_YEAR as YEAR } from '../data/tax-years';
 
         <h2>What we test</h2>
         <p>
-          The calculation engine is pure functions with no interface code, covered by 112 unit tests.
+          The calculation engine is pure functions with no interface code, covered by {TEST_COUNT} unit
+          tests.
           Expected values come from HMRC worked examples and published figures, not from our own
           output. The suite includes the cases most likely to be wrong:
         </p>

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CATEGORIES, GUIDES, TOOLS, toolBySlug } from '../src/data/site';
-import { SITE, ADS_ENABLED, ADSENSE_CLIENT } from '../src/config';
+import { SITE, ADS_ENABLED, ADSENSE_CLIENT, TEST_COUNT } from '../src/config';
 
 /**
  * Checks the built site rather than the source.
@@ -201,6 +201,29 @@ describeBuilt('built site', () => {
     }
   });
 
+  /*
+   * The privacy policy is the page an AdSense reviewer reads most carefully, and
+   * it is the easiest one to leave lying. Its "Third parties" section stated
+   * flatly that the site loaded no external scripts; enabling ads added
+   * googlesyndication.com to every page and turned that sentence into a false
+   * statement that survived a deploy. Assert the disclosure tracks the flag.
+   */
+  it('discloses the ad script on the privacy page whenever ads are enabled', () => {
+    const privacy = pages.find((p) => p.url === '/privacy/')!;
+    if (ADS_ENABLED && ADSENSE_CLIENT) {
+      expect(privacy.html, 'privacy page does not name AdSense').toMatch(/AdSense/);
+      expect(privacy.html, 'privacy page does not disclose the script host').toMatch(
+        /googlesyndication\.com/,
+      );
+      expect(
+        privacy.html,
+        'privacy page still claims the site loads no external scripts',
+      ).not.toMatch(/loads no external/);
+    } else {
+      expect(privacy.html).toMatch(/loads no external/);
+    }
+  });
+
   it('ships an ads.txt matching the configured publisher', () => {
     if (!ADS_ENABLED || !ADSENSE_CLIENT) return;
     const adsTxt = readFileSync(join(DIST, 'ads.txt'), 'utf8');
@@ -237,6 +260,26 @@ describeBuilt('built site', () => {
     );
     // Preact plus every calculator. Well under the weight of a React app.
     expect(totalBytes).toBeLessThan(120_000);
+  });
+});
+
+describe('published claims about ourselves', () => {
+  /*
+   * /about/ and /methodology/ both quote the size of this suite as evidence the
+   * maths is checked. Both had drifted to 112 while the suite grew to 139 — a
+   * stale accuracy claim on a site that sells not being stale. Counting `it(`
+   * matches the runner's own total because every test here is a plain `it`; if
+   * that ever stops being true this fails loudly, which is the point.
+   */
+  it('quotes a test count that matches the real suite', () => {
+    const dir = join(process.cwd(), 'tests');
+    const actual = readdirSync(dir)
+      .filter((f) => f.endsWith('.test.ts'))
+      .reduce(
+        (sum, f) => sum + (readFileSync(join(dir, f), 'utf8').match(/^\s*it\(/gm) ?? []).length,
+        0,
+      );
+    expect(TEST_COUNT, `TEST_COUNT is ${TEST_COUNT} but the suite has ${actual} tests`).toBe(actual);
   });
 });
 
